@@ -1,0 +1,9 @@
+{
+  "name": "cgp-assistant",
+  "version": "0.1.0",
+  "description": "Assistant IA pour Conseillers en Gestion de Patrimoine (CGP) — rédaction, analyse, veille, préparation client.",
+  "author": {
+    "name": "Aruna"
+  },
+  "license": "MIT"
+}
