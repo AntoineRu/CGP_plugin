@@ -48,59 +48,16 @@ Plugin [Claude Code](https://claude.ai/code) conçu pour les **Conseillers en Ge
 
 ## Installation
 
-### Étape 1 — Cloner le repository
+### Étape 1 — Enregistrer le repository comme source
 
 ```bash
-git clone https://github.com/AntoineRu/CGP_plugin.git
-cd CGP_plugin
+claude plugin marketplace add https://github.com/AntoineRu/CGP_plugin
 ```
 
-### Étape 2 — Créer le marketplace local
-
-Dans le dossier **parent** du repository cloné, créez le fichier `.claude-plugin/marketplace.json` :
+### Étape 2 — Installer le plugin
 
 ```bash
-mkdir -p ../.claude-plugin
-```
-
-Contenu du fichier `../.claude-plugin/marketplace.json` :
-
-```json
-{
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "cgp-local",
-  "description": "Plugin CGP Assistant local",
-  "owner": { "name": "Votre nom" },
-  "plugins": [
-    {
-      "name": "cgp-assistant",
-      "description": "Assistant IA pour Conseillers en Gestion de Patrimoine",
-      "source": "./CGP_plugin",
-      "category": "productivity"
-    }
-  ]
-}
-```
-
-> **Note :** Le chemin `"./CGP_plugin"` correspond au nom du dossier cloné. Adaptez-le si vous avez cloné dans un dossier différent.
-
-### Étape 3 — Enregistrer le marketplace
-
-Depuis le dossier parent (celui qui contient `.claude-plugin/`) :
-
-```bash
-claude plugin marketplace add .
-```
-
-Résultat attendu :
-```
-✔ Successfully added marketplace: cgp-local
-```
-
-### Étape 4 — Installer le plugin
-
-```bash
-claude plugin install cgp-assistant@cgp-local --scope user
+claude plugin install cgp-assistant
 ```
 
 Vérifier l'installation :
@@ -111,13 +68,13 @@ claude plugin list
 
 Résultat attendu :
 ```
-❯ cgp-assistant@cgp-local
+❯ cgp-assistant
     Version: 0.1.0
     Scope: user
     Status: ✔ enabled
 ```
 
-### Étape 5 — Vérifier les commandes
+### Étape 3 — Vérifier les commandes
 
 Redémarrez Claude Code, puis tapez `/` pour voir apparaître les commandes `/rdv`, `/rediger`, `/analyser`, etc.
 
@@ -234,9 +191,7 @@ cgp-assistant/
 ## Mise à jour
 
 ```bash
-cd CGP_plugin
-git pull
-claude plugin update cgp-assistant@cgp-local
+claude plugin update cgp-assistant
 ```
 
 ---
