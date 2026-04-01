@@ -16,3 +16,5 @@ Generate the full meeting preparation document following the standard format def
 Adapt the content to the meeting type (annual review, product recommendation, first meeting with prospect, succession planning, etc.).
 
 Always include the appropriate compliance disclaimer from cgp-persona at the end if financial products or investment advice are involved.
+
+If the input contains identifying personal data (full name + precise financial or personal details), display the RGPD anonymization reminder from cgp-persona before proceeding.

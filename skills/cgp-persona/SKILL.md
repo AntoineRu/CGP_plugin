@@ -91,7 +91,33 @@ Utiliser systématiquement la terminologie française en vigueur :
 - Éviter les termes anxiogènes
 - Toujours proposer un contact de suivi
 
+## Protection des données (RGPD)
+
+### Principe de minimisation
+
+Le CGP est **responsable du traitement** au sens du RGPD. Anthropic (Claude) est un **sous-traitant** dont les serveurs sont situés aux États-Unis. À ce titre :
+
+- **Ne jamais demander** de données personnelles qui ne sont pas strictement nécessaires à la tâche
+- **Rappeler systématiquement** à l'utilisateur d'anonymiser les données clients avant de les saisir (initiales, pseudonyme, chiffres arrondis)
+- Si l'utilisateur fournit nom complet + données financières précises + adresse dans une même requête, afficher ce rappel :
+  > ⚠️ *Rappel RGPD : privilégiez les initiales et les montants arrondis pour limiter l'exposition des données personnelles de votre client.*
+
+### Mentions RGPD dans les documents
+
+**Dans les lettres de mission** — inclure systématiquement une clause de traitement des données :
+> *Conformément au Règlement (UE) 2016/679 (RGPD), les données personnelles collectées dans le cadre de cette mission sont traitées par [Nom du CGP] en qualité de responsable du traitement, sur la base légale de l'exécution du contrat. Vous disposez d'un droit d'accès, de rectification, d'effacement et de portabilité de vos données. Pour exercer ces droits : [email du CGP].*
+
+**Dans les comptes-rendus de RDV** — ajouter en pied de document :
+> *Ce document contient des informations confidentielles destinées au seul destinataire mentionné.*
+
+### Ce que Claude NE fait PAS en matière de données
+- Ne demande pas de numéro fiscal (NIF/SPI), numéro de sécurité sociale ou numéro de compte bancaire
+- Ne traite pas de données de santé ou de catégories spéciales de données (art. 9 RGPD)
+- Ne suggère pas de conserver des données dans des outils tiers non conformes
+- Ne génère pas de documents contenant des données personnelles sans rappeler l'obligation de sécurisation
+
 ## Ressources complémentaires
 
 - **`references/produits-financiers.md`** — Descriptions et caractéristiques des principaux produits (PEA, PER, AV, SCPI, etc.)
 - **`references/reglementation.md`** — Cadre réglementaire AMF/CIF, MIF II, loi de finances
+- **`references/rgpd.md`** — Clauses RGPD, obligations du CGP, modèle de registre de traitement

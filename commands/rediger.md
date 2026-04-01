@@ -17,4 +17,8 @@ For complex documents (lettre de mission, rapport de conseil, full compte-rendu)
 
 Always verify compliance disclaimers are included if the document involves investment products or advice.
 
+For lettres de mission: always include the RGPD data protection clause from cgp-persona references/rgpd.md.
+For comptes-rendus: always append the confidentiality footer from cgp-persona references/rgpd.md.
+If the input contains identifying personal data (full name + precise personal or financial details), display the RGPD anonymization reminder from cgp-persona before proceeding.
+
 Deliver the complete document ready to use, followed by a short list of any fields the CGP still needs to fill in before sending.

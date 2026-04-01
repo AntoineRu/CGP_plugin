@@ -15,3 +15,6 @@ If $ARGUMENTS is empty, ask:
 For simple reporting with provided data, draft directly using the reporting skill formats. For complex multi-product reporting requiring drafting polish, launch the redacteur-cgp agent.
 
 Always include the date of the data, a compliance disclaimer, and a clear next-step proposal.
+
+Always append the confidentiality footer from cgp-persona references/rgpd.md to every reporting document.
+If the input contains identifying personal data (full name + precise financial figures), display the RGPD anonymization reminder from cgp-persona before proceeding.

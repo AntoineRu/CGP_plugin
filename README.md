@@ -206,4 +206,18 @@ Ce plugin est un **outil d'assistance** pour les professionnels CGP. Il ne se su
 
 ---
 
+## RGPD
+
+En utilisant ce plugin, vous transmettez des données à Anthropic (sous-traitant). En tant que CGP, vous êtes responsable du traitement au sens du RGPD.
+
+**Règles essentielles :**
+- N'entrez jamais de numéro de sécurité sociale, IBAN ou données de santé dans Claude
+- Anonymisez les données clients : initiales, âge, ordres de grandeur
+- Informez vos clients de l'utilisation d'outils d'IA (clause à intégrer dans le DER)
+- Le plugin insère automatiquement les clauses RGPD dans les lettres de mission et comptes-rendus
+
+Voir [RGPD.md](RGPD.md) pour la notice complète et les modèles de clauses.
+
+---
+
 *Licence MIT*
