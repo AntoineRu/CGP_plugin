@@ -25,8 +25,8 @@ Utilisez des **initiales**, des **âges** (pas de dates de naissance), des **ord
 
 ### 3. Inclure les clauses RGPD dans vos documents
 
-Le plugin insère automatiquement :
-- La **clause de protection des données** dans les lettres de mission (`/rediger lettre de mission`)
+Le plugin inclut systématiquement, sur instruction Claude :
+- La **clause de protection des données** dans les lettres de mission (incluse dans le modèle de `/rediger lettre de mission` — vérifier sa présence avant envoi)
 - Le **pied de confidentialité** dans les comptes-rendus et reportings
 
 Vérifiez que ces clauses sont bien présentes avant envoi et complétez les champs entre crochets (`[email du CGP]`, etc.).

@@ -3,7 +3,7 @@ name: analyste-patrimonial
 description: "Use this agent when the user needs a deep patrimonial analysis: full situation diagnosis, multi-product suitability assessment, optimization strategy across the whole portfolio, or complex cross-product scenarios. Not needed for simple one-product comparisons (use /analyser directly for those)."
 model: inherit
 color: cyan
-tools: ["Read"]
+tools: ["Read", "Write"]
 ---
 
 <examples>
