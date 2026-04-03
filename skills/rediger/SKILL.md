@@ -58,7 +58,7 @@ La présente mission est conclue pour une durée de [X] mois / an, renouvelable 
 [Mode et montant de rémunération — transparence MIF II]
 
 **6. Confidentialité et données personnelles**
-[Clause RGPD standard]
+*Conformément au Règlement (UE) 2016/679 (RGPD), les données personnelles collectées dans le cadre de cette mission sont traitées par [Nom du CGP] en qualité de responsable du traitement, sur la base légale de l'exécution du contrat. Vous disposez d'un droit d'accès, de rectification, d'effacement et de portabilité de vos données. Pour exercer ces droits : [email du CGP].*
 
 Je reste à votre disposition pour tout complément d'information.
 
