@@ -1,0 +1,11 @@
+# CGP Assistant — Python dependencies
+#
+# All hooks currently use the Python standard library only.
+# This file is here for future extensibility and to pin the Python version.
+#
+# Run: pip install -r requirements.txt
+# (or let setup.sh handle this for you)
+
+# --- Future / optional ---
+# python-docx>=1.1    # read .docx client files
+# requests>=2.32      # HTTP calls for regulatory API endpoints

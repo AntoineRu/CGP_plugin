@@ -15,6 +15,7 @@ Plugin [Claude Code](https://claude.ai/code) conçu pour les **Conseillers en Ge
 - [Architecture du plugin](#architecture-du-plugin)
 - [Mise à jour](#mise-à-jour)
 - [Avertissement réglementaire](#avertissement-réglementaire)
+- [RGPD](#rgpd)
 
 ---
 
@@ -27,10 +28,13 @@ Plugin [Claude Code](https://claude.ai/code) conçu pour les **Conseillers en Ge
 | `/analyser` | Compare des produits financiers et évalue leur adéquation au profil client | 4–7h/sem |
 | `/veille` | Synthèse réglementaire et fiscale avec recherche web en temps réel | 2–4h/sem |
 | `/bilan` | Génère une trame de bilan patrimonial pré-remplie | 2–4h/sem |
+| `/dossier` | Analyse patrimoniale complète + rapport de conseil en une commande | 3–5h/sem |
 | `/vulgariser` | Traduit un concept financier en langage simple pour un client | 1–2h/sem |
 | `/marketing` | Rédige posts LinkedIn, newsletters, articles de blog | 1–3h/sem |
 | `/reporting` | Prépare les lettres de suivi et bilans périodiques clients | 2–3h/sem |
 | `/prospecter` | Génère emails de prospection, scripts d'appel, messages LinkedIn | 1–2h/sem |
+| `/client` | Charge ou sauvegarde le profil complet d'un client en mémoire persistante | — |
+| `/nouveau-client` | Enregistre un nouveau client avec pseudonymisation RGPD automatique | — |
 
 **3 agents spécialisés** travaillent en autonomie sur les tâches complexes :
 - `redacteur-cgp` — rédaction longue avec conformité AMF/MIF II automatique
@@ -43,6 +47,7 @@ Plugin [Claude Code](https://claude.ai/code) conçu pour les **Conseillers en Ge
 
 - [Claude Code](https://claude.ai/code) installé et configuré
 - Un abonnement Claude actif (Claude.ai Pro ou API)
+- Python 3.8+ (détecté et configuré automatiquement par `/setup`)
 
 ---
 
@@ -74,9 +79,19 @@ Résultat attendu :
     Status: ✔ enabled
 ```
 
-### Étape 3 — Vérifier les commandes
+### Étape 3 — Lancer la configuration initiale
 
-Redémarrez Claude Code, puis tapez `/` pour voir apparaître les commandes `/rdv`, `/rediger`, `/analyser`, etc.
+Redémarrez Claude Code, puis lancez :
+
+```
+/setup
+```
+
+Cette commande détecte Python, crée l'environnement virtuel, configure les hooks RGPD et vérifie l'installation. **À faire une seule fois après l'installation ou après un changement d'environnement Python.**
+
+### Étape 4 — Vérifier les commandes
+
+Tapez `/` pour voir apparaître les commandes `/rdv`, `/rediger`, `/analyser`, etc.
 
 ---
 
@@ -159,6 +174,39 @@ Génère des contenus de prospection personnalisés.
 /prospecter séquence 3 emails consultant indépendant
 ```
 
+### `/dossier [client]`
+Génère en une seule commande une analyse patrimoniale complète et un rapport de conseil structuré, en combinant les agents `analyste-patrimonial` et `redacteur-cgp`.
+
+```
+/dossier Martin Dupont
+```
+
+### `/nouveau-client [Prénom Nom]`
+Enregistre un nouveau client dans le système de pseudonymisation RGPD. Attribue automatiquement un pseudonyme à initiales identiques. À partir de ce moment, le vrai nom est remplacé par le pseudonyme dans tous les échanges avec Claude.
+
+```
+/nouveau-client Martin Dupont
+```
+
+### `/client load [Prénom Nom]` · `/client save [Prénom Nom]`
+Charge ou sauvegarde le profil complet d'un client (situation familiale, patrimoine, objectifs, notes de session).
+
+Chaque sauvegarde écrit deux fichiers simultanément :
+- `~/.cgp-clients/<pseudo>.json` — copie pseudonymisée (utilisée par le système IA)
+- `~/cgp-clients-private/<nom_réel>.json` — copie décodée avec les vrais noms, consultable directement
+
+```
+/client load Martin Dupont      ← début de session
+/client save Martin Dupont      ← fin de session
+```
+
+### `/setup`
+Configuration initiale du plugin. Détecte Python, crée le venv, configure les hooks, initialise le registre RGPD et lance les tests de vérification. Compatible Linux, macOS, WSL et Windows natif.
+
+```
+/setup
+```
+
 ---
 
 ## Architecture du plugin
@@ -167,10 +215,17 @@ Génère des contenus de prospection personnalisés.
 cgp-assistant/
 ├── .claude-plugin/
 │   └── plugin.json              # Manifeste du plugin
-├── commands/                    # 9 commandes slash
-├── skills/                      # 11 modules de connaissance
+├── commands/                    # 13 commandes slash
+│   ├── setup.md                 # Configuration initiale (à lancer en premier)
+│   ├── rdv.md / rediger.md / analyser.md / veille.md / bilan.md
+│   ├── dossier.md               # Analyse patrimoniale complète + rapport
+│   ├── vulgariser.md / marketing.md / reporting.md / prospecter.md
+│   ├── client.md                # Chargement et sauvegarde profil client
+│   └── nouveau-client.md        # Enregistrement RGPD nouveau client
+├── skills/                      # 12 modules de connaissance
 │   ├── cgp-persona/             # Fondation : ton, conformité AMF/CIF, vocabulaire
 │   ├── profil-client/           # Fondation : structure et collecte du profil client
+│   ├── client-memory/           # Mémoire persistante des profils clients
 │   ├── preparer-rdv/            # Logique préparation rendez-vous
 │   ├── rediger/                 # Formats et règles de rédaction
 │   ├── analyser/                # Comparatifs et grilles d'analyse produits
@@ -180,11 +235,32 @@ cgp-assistant/
 │   ├── marketing/               # Règles AMF et idées de sujets
 │   ├── reporting/               # Formats de reporting périodique
 │   └── prospecter/              # Scripts et séquences de prospection
-└── agents/                      # 3 agents autonomes
-    ├── redacteur-cgp.md         # Rédaction de documents longs
-    ├── analyste-patrimonial.md  # Diagnostic patrimonial complet
-    └── veilleur-fiscal.md       # Veille réglementaire avec recherche web
+├── agents/                      # 3 agents autonomes
+│   ├── redacteur-cgp.md         # Rédaction de documents longs
+│   ├── analyste-patrimonial.md  # Diagnostic patrimonial complet
+│   └── veilleur-fiscal.md       # Veille réglementaire avec recherche web
+└── hooks/                       # Traitements automatiques en arrière-plan
+    ├── anonymize.py             # Pseudonymisation RGPD (UserPromptSubmit + PostToolUse)
+    ├── fiscal_alerts.py         # Alertes échéances fiscales (UserPromptSubmit, 1×/jour)
+    ├── client_store.py          # Lecture/écriture profils clients (dual store)
+    └── hooks.json               # Configuration des événements Claude Code
 ```
+
+---
+
+## Hooks — Traitements automatiques
+
+Trois scripts s'exécutent silencieusement à chaque session sans intervention de l'utilisateur :
+
+| Hook | Événement | Rôle |
+|---|---|---|
+| `anonymize.py encode` | Avant chaque prompt | Remplace les vrais noms clients par leurs pseudonymes RGPD |
+| `anonymize.py decode` | Après chaque écriture de fichier | Restaure les vrais noms dans les documents produits |
+| `fiscal_alerts.py` | Avant le premier prompt de la journée | Rappelle les échéances fiscales imminentes |
+
+Les profils clients sont stockés dans deux emplacements complémentaires :
+- `~/.cgp-clients/` — fichiers pseudonymisés, utilisés par l'IA pendant les sessions
+- `~/cgp-clients-private/` — fichiers décodés avec les vrais noms, pour consultation directe
 
 ---
 
