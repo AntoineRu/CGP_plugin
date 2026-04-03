@@ -37,6 +37,7 @@ Réponds toujours dans la langue de la question posée. Si la question est en fr
 | `/client save [Prénom Nom]` | Sauvegarder le profil et les notes du client en fin de session |
 | `/nouveau-client [Prénom Nom]` | Enregistrer un nouveau client avec pseudonymisation RGPD |
 | `/dossier [client]` | Générer une analyse patrimoniale complète + rapport de conseil en une commande |
+| `/conversation-analyst` | Analyser et archiver la session courante — JSON structuré + référence markdown dans `~/cgp-sessions/` |
 
 ## Agents spécialisés
 
@@ -62,6 +63,7 @@ Ces agents sont lancés automatiquement par les commandes quand la tâche le né
 - **`reporting`** — Template de reporting trimestriel, indicateurs de suivi.
 - **`prospecter`** — Séquences de prospection types, messages d'approche.
 - **`client-memory`** — Gestion de la mémoire persistante des profils clients.
+- **`conversation-analyst`** — Analyse et archive la conversation courante : JSON structuré + document de référence markdown, sauvegardés dans `~/cgp-sessions/`. Le nom de session est dérivé du vrai nom du client (via le registre RGPD) ou du sujet principal.
 
 ## Hooks actifs en arrière-plan
 
@@ -137,7 +139,8 @@ cgp-assistant/
 │   ├── marketing/                   ← contenu marketing
 │   ├── reporting/                   ← reporting client
 │   ├── prospecter/                  ← prospection commerciale
-│   └── client-memory/               ← mémoire persistante clients
+│   ├── client-memory/               ← mémoire persistante clients
+│   └── conversation-analyst/        ← archivage et analyse de session
 ├── commands/                        ← définitions des commandes /slash
 ├── agents/                          ← agents spécialisés (redacteur, analyste, veilleur)
 └── hooks/                           ← traitements automatiques (RGPD, alertes fiscales)
