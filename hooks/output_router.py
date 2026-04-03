@@ -10,6 +10,7 @@ Stdin payload: {"tool_name": "Write", "tool_input": {"file_path": "..."}, ...}
 Stdout: nothing (passive hook)
 """
 
+import datetime
 import json
 import pathlib
 import re
@@ -19,7 +20,9 @@ import sys
 CGP_PREFIX = "cgp-"
 TRIGGER_EXTENSIONS = {".md"}
 
-# Maps filename keyword → (subfolder_in_CGP, is_cabinet)
+# Maps filename keywords to (subfolder, is_cabinet). First match wins — order matters.
+# Include both command stem ('analyser') and common noun forms ('analyse') to catch
+# files named by command output and files named manually.
 TYPE_MAP = [
     ("bilan",       ("bilans",          False)),
     ("rediger",     ("lettres",         False)),
@@ -41,16 +44,12 @@ TYPE_MAP = [
     ("prospect",    ("prospection",     True)),
 ]
 
+# style_map overrides: maps standard Word style names to template-specific names.
+# Example: {"Heading 1": "Titre 1", "Normal": "Corps de texte"}
+# Leave empty to use standard Word style names as-is.
 DEFAULT_CONFIG = {
     "template_path": None,
-    "style_map": {
-        "Heading 1": "Heading 1",
-        "Heading 2": "Heading 2",
-        "Heading 3": "Heading 3",
-        "Normal": "Normal",
-        "List Bullet": "List Bullet",
-        "List Number": "List Number",
-    },
+    "style_map": {},
     "typography": {
         "body_font": "Calibri",
         "body_size": 11,
@@ -209,7 +208,6 @@ def main() -> None:
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Build output filename
-    import datetime
     date_str = datetime.date.today().isoformat()
     type_slug = subfolder.replace("-", "").replace("/", "")
     if client_name:
@@ -219,6 +217,13 @@ def main() -> None:
         out_name = f"{date_str}_{type_slug}.docx"
 
     out_path = target_dir / out_name
+    # Avoid silent overwrite: append counter if file already exists
+    if out_path.exists():
+        stem = out_path.stem
+        counter = 2
+        while out_path.exists():
+            out_path = target_dir / f"{stem}_{counter}.docx"
+            counter += 1
 
     # Convert Markdown → docx
     try:
