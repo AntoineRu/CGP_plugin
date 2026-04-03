@@ -66,8 +66,11 @@ def load_or_create_config() -> dict:
         try:
             return json.loads(config_path.read_text(encoding="utf-8"))
         except Exception:
-            pass
-    # Create default config
+            sys.stderr.write(
+                "[cgp] charte_config.json corrompu — paramètres par défaut utilisés (fichier conservé)\n"
+            )
+            return DEFAULT_CONFIG
+    # File absent: create it with defaults
     config_path.write_text(
         json.dumps(DEFAULT_CONFIG, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -230,8 +233,8 @@ def main() -> None:
     # Delete source .md
     try:
         md_path.unlink()
-    except Exception:
-        pass
+    except Exception as exc:
+        sys.stderr.write(f"[cgp] avertissement : impossible de supprimer {md_path} : {exc}\n")
 
     sys.stderr.write(f"[cgp] → {out_path}\n")
 
