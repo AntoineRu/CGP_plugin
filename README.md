@@ -35,6 +35,7 @@ Plugin [Claude Code](https://claude.ai/code) conçu pour les **Conseillers en Ge
 | `/prospecter` | Génère emails de prospection, scripts d'appel, messages LinkedIn | 1–2h/sem |
 | `/client` | Charge ou sauvegarde le profil complet d'un client en mémoire persistante | — |
 | `/nouveau-client` | Enregistre un nouveau client avec pseudonymisation RGPD automatique | — |
+| `/conversation-analyst` | Archive la session courante : JSON structuré + référence markdown dans `~/cgp-sessions/` | — |
 
 **3 agents spécialisés** travaillent en autonomie sur les tâches complexes :
 - `redacteur-cgp` — rédaction longue avec conformité AMF/MIF II automatique
@@ -200,6 +201,19 @@ Chaque sauvegarde écrit deux fichiers simultanément :
 /client save Martin Dupont      ← fin de session
 ```
 
+### `/conversation-analyst`
+Analyse et archive la session courante en deux fichiers persistants :
+- `~/cgp-sessions/archive/<date>_<session_name>.json` — enregistrement structuré (tons, décisions, actions, artefacts produits)
+- `~/cgp-sessions/references/<date>_<session_name>_reference.md` — document de référence avec concepts, sources et fils de recherche
+
+Le nom de session est dérivé automatiquement du **vrai nom du client** (résolu depuis le registre RGPD) ou du sujet principal si aucun client n'est impliqué.
+
+> Note : le fichier JSON conserve les pseudonymes (audit) ; le fichier markdown est décodé avec les vrais noms (lecture humaine).
+
+```
+/conversation-analyst
+```
+
 ### `/setup`
 Configuration initiale du plugin. Détecte Python, crée le venv, configure les hooks, initialise le registre RGPD et lance les tests de vérification. Compatible Linux, macOS, WSL et Windows natif.
 
@@ -215,17 +229,19 @@ Configuration initiale du plugin. Détecte Python, crée le venv, configure les 
 cgp-assistant/
 ├── .claude-plugin/
 │   └── plugin.json              # Manifeste du plugin
-├── commands/                    # 13 commandes slash
+├── commands/                    # 14 commandes slash
 │   ├── setup.md                 # Configuration initiale (à lancer en premier)
 │   ├── rdv.md / rediger.md / analyser.md / veille.md / bilan.md
 │   ├── dossier.md               # Analyse patrimoniale complète + rapport
 │   ├── vulgariser.md / marketing.md / reporting.md / prospecter.md
 │   ├── client.md                # Chargement et sauvegarde profil client
-│   └── nouveau-client.md        # Enregistrement RGPD nouveau client
-├── skills/                      # 12 modules de connaissance
+│   ├── nouveau-client.md        # Enregistrement RGPD nouveau client
+│   └── conversation-analyst.md  # Archivage de session (JSON + markdown)
+├── skills/                      # 13 modules de connaissance
 │   ├── cgp-persona/             # Fondation : ton, conformité AMF/CIF, vocabulaire
 │   ├── profil-client/           # Fondation : structure et collecte du profil client
 │   ├── client-memory/           # Mémoire persistante des profils clients
+│   ├── conversation-analyst/    # Analyse et archivage de session dans ~/cgp-sessions/
 │   ├── preparer-rdv/            # Logique préparation rendez-vous
 │   ├── rediger/                 # Formats et règles de rédaction
 │   ├── analyser/                # Comparatifs et grilles d'analyse produits
@@ -261,6 +277,11 @@ Trois scripts s'exécutent silencieusement à chaque session sans intervention d
 Les profils clients sont stockés dans deux emplacements complémentaires :
 - `~/.cgp-clients/` — fichiers pseudonymisés, utilisés par l'IA pendant les sessions
 - `~/cgp-clients-private/` — fichiers décodés avec les vrais noms, pour consultation directe
+
+Les archives de session sont stockées dans `~/cgp-sessions/` :
+- `archive/` — JSON structuré par session (pseudonymisé, pour audit)
+- `references/` — documents de référence markdown (vrais noms, pour lecture)
+- `INDEX.md` — index chronologique de toutes les sessions
 
 ---
 
