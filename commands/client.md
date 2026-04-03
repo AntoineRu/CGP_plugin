@@ -19,17 +19,23 @@ Analyse `$ARGUMENTS` pour déterminer la sous-commande :
 
 1. Charge le skill `profil-client` pour extraire et structurer toutes les informations client disponibles dans la conversation en format JSON structuré.
 2. Identifie le pseudonyme du client via le registre d'anonymisation :
-   ```
-   /home/aruna/anaconda3/envs/finance/bin/python3 "${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py" list
+   ```bash
+   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
+   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py" list
    ```
    Cherche la correspondance nom réel ↔ pseudonyme pour le client concerné. Si le client n'est pas encore enregistré, utiliser d'abord :
-   ```
-   /home/aruna/anaconda3/envs/finance/bin/python3 "${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py" register "Prénom Nom"
+   ```bash
+   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
+   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py" register "Prénom Nom"
    ```
 3. Sérialise le profil structuré en JSON (tous les champs du format `profil-client` : situation personnelle, financière, patrimoine, objectifs, profil investisseur, situation fiscale, notes).
 4. Sauvegarde via :
-   ```
-   echo '<json_du_profil>' | /home/aruna/anaconda3/envs/finance/bin/python3 "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" save <pseudo>
+   ```bash
+   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
+   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   echo '<json_du_profil>' | "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" save <pseudo>
    ```
 5. Confirme à l'utilisateur :
    - "Profil de [nom réel] sauvegardé."
@@ -44,8 +50,10 @@ Analyse `$ARGUMENTS` pour déterminer la sous-commande :
 **Objectif** : Recharger un profil client sauvegardé et l'injecter dans la session en cours.
 
 1. Exécute :
-   ```
-   /home/aruna/anaconda3/envs/finance/bin/python3 "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" load "[nom]"
+   ```bash
+   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
+   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" load "[nom]"
    ```
    `[nom]` peut être le nom réel ou le pseudonyme — le script résout automatiquement.
 2. Parse le JSON retourné et charge le skill `profil-client` pour injecter les données comme contexte actif de la session.
@@ -59,8 +67,10 @@ Analyse `$ARGUMENTS` pour déterminer la sous-commande :
 **Objectif** : Afficher tous les profils clients sauvegardés.
 
 1. Exécute :
-   ```
-   /home/aruna/anaconda3/envs/finance/bin/python3 "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" list
+   ```bash
+   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
+   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" list
    ```
 2. Affiche un tableau formaté en Markdown :
 
@@ -79,8 +89,10 @@ Analyse `$ARGUMENTS` pour déterminer la sous-commande :
 1. Demande confirmation à l'utilisateur avant toute suppression :
    "Vous êtes sur le point de supprimer définitivement le profil de [nom]. Cette action est irréversible. Confirmez-vous ? (oui/non)"
 2. Si confirmé, résout le pseudonyme si besoin (via `anonymize.py list`), puis exécute :
-   ```
-   /home/aruna/anaconda3/envs/finance/bin/python3 "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" delete "[pseudo]"
+   ```bash
+   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
+   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" delete "[pseudo]"
    ```
 3. Confirme : "Profil de [nom] supprimé."
 
@@ -101,7 +113,7 @@ Afficher le résumé d'utilisation :
 
 ## Notes techniques
 
-- **Python** : toujours utiliser `/home/aruna/anaconda3/envs/finance/bin/python3`
+- **Python** : détecté automatiquement via `${CLAUDE_PLUGIN_ROOT}/../.venv/` (Linux/macOS: `bin/python3`, Windows: `Scripts/python.exe`)
 - **Stockage** : `~/.cgp-clients/<pseudo>.json` — jamais de nom réel dans le nom de fichier
 - **Registre anonymisation** : `~/.cgp-client-registry.json` (géré par `anonymize.py`)
 - **En cas d'erreur JSON** du script : afficher le message d'erreur retourné et proposer une action corrective

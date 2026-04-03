@@ -16,5 +16,8 @@ Thumbs.db
 *.swp
 *.swo
 
+# Plugin config (machine-specific paths)
+hooks/hooks.json
+
 # Logs
 *.log
