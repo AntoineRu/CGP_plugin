@@ -18,6 +18,7 @@ Thumbs.db
 
 # Plugin config (machine-specific paths)
 hooks/hooks.json
+hooks/charte_config.json
 
 # Logs
 *.log

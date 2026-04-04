@@ -126,28 +126,29 @@ Count active (non-comment, non-blank) lines in requirements.txt. If zero, announ
 
 ## Phase 5 — Generate `hooks/hooks.json`
 
-`hooks.json` is gitignored (machine-specific). The template already uses `${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3`, which the hooks engine expands at runtime — so no path substitution is needed on Linux/macOS/WSL. On Windows, swap the binary sub-path to `Scripts/python.exe`.
+`hooks.json` is gitignored (machine-specific). Two committed templates exist:
+- `hooks/hooks.json.example` — Linux / macOS / WSL (`bin/python3`)
+- `hooks/hooks.json.windows.example` — Windows native (`Scripts/python.exe`)
+
+The correct template is selected automatically based on the detected platform and copied as-is — no path substitution needed.
 
 ```bash
 "$VENV_PYTHON" - <<'PYEOF'
-import pathlib, shutil, sys
+import os, pathlib, sys
 
-hooks_dir = pathlib.Path("${CLAUDE_PLUGIN_ROOT}/hooks")
+hooks_dir = pathlib.Path(os.environ["CLAUDE_PLUGIN_ROOT"]) / "hooks"
 hooks_path = hooks_dir / "hooks.json"
-example_path = hooks_dir / "hooks.json.example"
 
 if hooks_path.exists():
     print("hooks.json already exists — kept as-is")
 else:
+    example_name = "hooks.json.windows.example" if sys.platform == "win32" else "hooks.json.example"
+    example_path = hooks_dir / example_name
     if not example_path.exists():
-        print("ERROR: hooks.json.example not found — cannot generate hooks.json")
+        print(f"ERROR: {example_name} not found — cannot generate hooks.json")
         raise SystemExit(1)
-    content = example_path.read_text(encoding="utf-8")
-    # On Windows, the venv binary is under Scripts/ not bin/
-    if sys.platform == "win32":
-        content = content.replace("bin/python3", "Scripts/python.exe")
-    hooks_path.write_text(content, encoding="utf-8")
-    print(f"Generated: {hooks_path}")
+    hooks_path.write_text(example_path.read_text(encoding="utf-8"), encoding="utf-8")
+    print(f"Generated: {hooks_path} (from {example_name})")
 PYEOF
 ```
 
