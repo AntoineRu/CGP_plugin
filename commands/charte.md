@@ -178,7 +178,7 @@ mkdir -p "${CLAUDE_PLUGIN_ROOT}/skills/charte-graphique"
 
 ## Phase 6 — Activer le hook output_router dans `hooks.json`
 
-Lire le `hooks.json` actif et ajouter l'entrée PostToolUse pour render_docx si elle n'y est pas déjà :
+Lire le `hooks.json` actif et ajouter l'entrée PostToolUse pour output_router si elle n'y est pas déjà :
 
 ```bash
 "$VENV_PY" - <<'PYEOF'
