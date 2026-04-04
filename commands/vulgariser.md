@@ -15,3 +15,15 @@ Choose the appropriate format from the vulgariser skill based on the use case:
 - FAQ for website or newsletter → Format 3
 
 Adapt the language and analogies to the client's profile if known. Always end with a concrete "what this means for you" implication.
+
+---
+
+## Sauvegarde
+
+À la fin de ta réponse, propose à l'utilisateur :
+> "Voulez-vous sauvegarder cette réponse ? (oui / non)"
+
+Si oui : écris le contenu complet de ta réponse dans un fichier nommé
+`cgp-vulgariser-<YYYYMMDD>.md` dans le répertoire courant.
+Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
+dans `~/CGP/_cabinet/vulgarisation/`.

@@ -15,3 +15,15 @@ If $ARGUMENTS is empty, ask:
 Draft the content following the formats in the prospecter skill. Apply the rule: value before ask — always bring something useful before requesting time. Include one clear CTA only. Apply AMF rules: no promise of gains or tax savings.
 
 For a full 3-email sequence, generate all three messages with timing notes.
+
+---
+
+## Sauvegarde
+
+À la fin de ta réponse, propose à l'utilisateur :
+> "Voulez-vous sauvegarder cette réponse ? (oui / non)"
+
+Si oui : écris le contenu complet de ta réponse dans un fichier nommé
+`cgp-prospecter-<YYYYMMDD>.md` dans le répertoire courant.
+Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
+dans `~/CGP/_cabinet/prospection/`.

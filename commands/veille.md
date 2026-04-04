@@ -15,3 +15,15 @@ If $ARGUMENTS is empty, ask what topic needs monitoring: a specific law or regul
 - Topic requiring current or recent information (recent law, this year's loi de finances, AMF update, current market data) → launch the veilleur-fiscal agent to search and verify via the web
 
 Always indicate the date of the information and its source. Flag clearly if any data needs verification from official sources before being shared with clients.
+
+---
+
+## Sauvegarde
+
+À la fin de ta réponse, propose à l'utilisateur :
+> "Voulez-vous sauvegarder cette réponse ? (oui / non)"
+
+Si oui : écris le contenu complet de ta réponse dans un fichier nommé
+`cgp-veille-<YYYYMMDD>.md` dans le répertoire courant.
+Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
+dans `~/CGP/_cabinet/veille/`.
