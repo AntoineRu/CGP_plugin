@@ -124,56 +124,34 @@ Count active (non-comment, non-blank) lines in requirements.txt. If zero, announ
 
 ---
 
-## Phase 5 — Patch Plugin Configuration with New Python Path
+## Phase 5 — Generate `hooks/hooks.json`
 
-Two files need updating so hooks and commands always call the correct Python:
-
-### 5a — `hooks/hooks.json`
-
-Use `$VENV_PYTHON` to patch the file safely (reads JSON, rewrites with new path):
+`hooks.json` is gitignored (machine-specific). The template already uses `${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3`, which the hooks engine expands at runtime — so no path substitution is needed on Linux/macOS/WSL. On Windows, swap the binary sub-path to `Scripts/python.exe`.
 
 ```bash
 "$VENV_PYTHON" - <<'PYEOF'
-import json, re, pathlib
+import pathlib, shutil, sys
 
-hooks_path = pathlib.Path("${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json")
-new_python = "$VENV_PYTHON"
+hooks_dir = pathlib.Path("${CLAUDE_PLUGIN_ROOT}/hooks")
+hooks_path = hooks_dir / "hooks.json"
+example_path = hooks_dir / "hooks.json.example"
 
-content = hooks_path.read_text(encoding="utf-8")
-# Replace any absolute python interpreter path in command strings
-patched = re.sub(r'(/[^\s"]+/python[3]?|[A-Z]:\\[^"]+python(?:\.exe)?)', new_python, content)
-
-if patched != content:
-    hooks_path.write_text(patched, encoding="utf-8")
-    print(f"Patched: {hooks_path}")
+if hooks_path.exists():
+    print("hooks.json already exists — kept as-is")
 else:
-    print("hooks.json already up to date")
+    if not example_path.exists():
+        print("ERROR: hooks.json.example not found — cannot generate hooks.json")
+        raise SystemExit(1)
+    content = example_path.read_text(encoding="utf-8")
+    # On Windows, the venv binary is under Scripts/ not bin/
+    if sys.platform == "win32":
+        content = content.replace("bin/python3", "Scripts/python.exe")
+    hooks_path.write_text(content, encoding="utf-8")
+    print(f"Generated: {hooks_path}")
 PYEOF
 ```
 
-### 5b — `commands/client.md`
-
-Apply the same substitution to the inline bash blocks in client.md:
-
-```bash
-"$VENV_PYTHON" - <<'PYEOF'
-import re, pathlib
-
-client_path = pathlib.Path("${CLAUDE_PLUGIN_ROOT}/commands/client.md")
-new_python = "$VENV_PYTHON"
-
-content = client_path.read_text(encoding="utf-8")
-patched = re.sub(r'(/[^\s"]+/python[3]?|[A-Z]:\\[^"]+python(?:\.exe)?)', new_python, content)
-
-if patched != content:
-    client_path.write_text(patched, encoding="utf-8")
-    print(f"Patched: {client_path}")
-else:
-    print("client.md already up to date")
-PYEOF
-```
-
-Announce: "Fichiers de configuration mis à jour avec le nouvel interpréteur Python."
+Announce: "hooks.json généré avec succès."
 
 ---
 
