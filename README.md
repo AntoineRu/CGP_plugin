@@ -33,6 +33,7 @@ Plugin [Claude Code](https://claude.ai/code) conçu pour les **Conseillers en Ge
 | `/marketing` | Rédige posts LinkedIn, newsletters, articles de blog | 1–3h/sem |
 | `/reporting` | Prépare les lettres de suivi et bilans périodiques clients | 2–3h/sem |
 | `/prospecter` | Génère emails de prospection, scripts d'appel, messages LinkedIn | 1–2h/sem |
+| `/charte` | Configure le template Word du cabinet — génère `.docx` stylé automatiquement à chaque sauvegarde | — |
 | `/client` | Charge ou sauvegarde le profil complet d'un client en mémoire persistante | — |
 | `/nouveau-client` | Enregistre un nouveau client avec pseudonymisation RGPD automatique | — |
 | `/conversation-analyst` | Archive la session courante : JSON structuré + référence markdown dans `~/cgp-sessions/` | — |
@@ -214,6 +215,13 @@ Le nom de session est dérivé automatiquement du **vrai nom du client** (résol
 /conversation-analyst
 ```
 
+### `/charte [chemin/vers/template.docx]`
+Configure la charte graphique du cabinet à partir d'un template Word. Une fois configuré, chaque commande peut sauvegarder sa réponse en `.docx` (stylé avec votre template) dans `~/CGP/`.
+
+```
+/charte /home/user/Cabinet/template.docx
+```
+
 ### `/setup`
 Configuration initiale du plugin. Détecte Python, crée le venv, configure les hooks, initialise le registre RGPD et lance les tests de vérification. Compatible Linux, macOS, WSL et Windows natif.
 
@@ -229,8 +237,9 @@ Configuration initiale du plugin. Détecte Python, crée le venv, configure les 
 cgp-assistant/
 ├── .claude-plugin/
 │   └── plugin.json              # Manifeste du plugin
-├── commands/                    # 14 commandes slash
+├── commands/                    # 15 commandes slash
 │   ├── setup.md                 # Configuration initiale (à lancer en premier)
+│   ├── charte.md                # Configuration charte graphique + template Word
 │   ├── rdv.md / rediger.md / analyser.md / veille.md / bilan.md
 │   ├── dossier.md               # Analyse patrimoniale complète + rapport
 │   ├── vulgariser.md / marketing.md / reporting.md / prospecter.md
@@ -259,29 +268,35 @@ cgp-assistant/
     ├── anonymize.py             # Pseudonymisation RGPD (UserPromptSubmit + PostToolUse)
     ├── fiscal_alerts.py         # Alertes échéances fiscales (UserPromptSubmit, 1×/jour)
     ├── client_store.py          # Lecture/écriture profils clients (dual store)
-    └── hooks.json               # Configuration des événements Claude Code
+    ├── output_router.py         # Conversion .md → .docx + routage dans ~/CGP/ (PostToolUse)
+    ├── hooks.json               # Configuration des événements Claude Code (gitignored)
+    ├── hooks.json.example       # Template Linux / macOS / WSL
+    └── hooks.json.windows.example  # Template Windows natif
 ```
 
 ---
 
 ## Hooks — Traitements automatiques
 
-Trois scripts s'exécutent silencieusement à chaque session sans intervention de l'utilisateur :
+Quatre scripts s'exécutent silencieusement à chaque session sans intervention de l'utilisateur :
 
 | Hook | Événement | Rôle |
 |---|---|---|
 | `anonymize.py encode` | Avant chaque prompt | Remplace les vrais noms clients par leurs pseudonymes RGPD |
 | `anonymize.py decode` | Après chaque écriture de fichier | Restaure les vrais noms dans les documents produits |
 | `fiscal_alerts.py` | Avant le premier prompt de la journée | Rappelle les échéances fiscales imminentes |
+| `output_router.py` | Après chaque écriture de fichier `.md` préfixé `cgp-` | Convertit en `.docx` et range dans `~/CGP/<Client>/<type>/` |
 
-Les profils clients sont stockés dans deux emplacements complémentaires :
-- `~/.cgp-clients/` — fichiers pseudonymisés, utilisés par l'IA pendant les sessions
-- `~/cgp-clients-private/` — fichiers décodés avec les vrais noms, pour consultation directe
+**Emplacements de données persistantes :**
 
-Les archives de session sont stockées dans `~/cgp-sessions/` :
-- `archive/` — JSON structuré par session (pseudonymisé, pour audit)
-- `references/` — documents de référence markdown (vrais noms, pour lecture)
-- `INDEX.md` — index chronologique de toutes les sessions
+| Répertoire | Rôle |
+|---|---|
+| `~/.cgp-clients/` | Profils pseudonymisés — utilisés par l'IA |
+| `~/cgp-clients-private/` | Profils décodés — consultation directe par le CGP |
+| `~/.cgp-client-registry.json` | Table de correspondance nom réel ↔ pseudonyme |
+| `~/CGP/_cabinet/<type>/` | Productions cabinet (veille, marketing, prospection…) |
+| `~/CGP/<Client>/<type>/` | Productions client (bilans, lettres, analyses…) |
+| `~/cgp-sessions/` | Archives de session — JSON + markdown |
 
 ---
 

@@ -24,6 +24,7 @@ Réponds toujours dans la langue de la question posée. Si la question est en fr
 | Commande | Objectif |
 |---|---|
 | `/setup` | **À lancer en premier** — détecte Python, crée le venv, configure les hooks, vérifie l'installation |
+| `/charte [template.docx]` | Configure la charte graphique du cabinet — active la conversion auto `.md` → `.docx` stylé dans `~/CGP/` |
 | `/rdv [client] [objet]` | Préparer un rendez-vous client (ordre du jour, points à aborder, objections probables) |
 | `/rediger [type] [client]` | Rédiger un document professionnel (lettre de mission, CR de RDV, lettre de suivi, email) |
 | `/analyser [situation ou produit]` | Analyser une situation patrimoniale ou comparer des produits financiers |
@@ -71,6 +72,7 @@ Ces traitements s'exécutent automatiquement et silencieusement :
 
 - **Anonymisation RGPD** (`anonymize.py`) — Remplace les vrais noms clients par des pseudonymes avant envoi, les restitue dans l'affichage. Transparent pour l'utilisateur.
 - **Alertes fiscales** (`fiscal_alerts.py`) — Détecte les échéances fiscales imminentes dans les messages et remonte une alerte proactive si nécessaire.
+- **Routage et conversion** (`output_router.py`) — Après chaque `Write`/`Edit`, si le fichier est un `.md` préfixé `cgp-`, le convertit en `.docx` et le range dans `~/CGP/<Client>/<type>/` (ou `~/CGP/_cabinet/<type>/` pour les productions cabinet). Requiert `/charte` pour appliquer un template Word ; fonctionne aussi sans template.
 
 ## Contraintes de conformité
 
@@ -143,5 +145,5 @@ cgp-assistant/
 │   └── conversation-analyst/        ← archivage et analyse de session
 ├── commands/                        ← définitions des commandes /slash
 ├── agents/                          ← agents spécialisés (redacteur, analyste, veilleur)
-└── hooks/                           ← traitements automatiques (RGPD, alertes fiscales)
+└── hooks/                           ← traitements automatiques (RGPD, alertes, routage)
 ```
