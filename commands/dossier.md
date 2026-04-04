@@ -88,3 +88,12 @@ Si le CGP choisit l'option 1, lancer l'agent `redacteur-cgp` avec les instructio
 Si le CGP choisit l'option 2, lire et afficher le contenu du rapport sauvegardé pour révision en direct.
 
 Si le CGP choisit l'option 3, confirmer simplement que le dossier est archivé et disponible dans le répertoire courant.
+
+---
+
+## Sauvegarde
+
+Le rapport final généré par l'agent `redacteur-cgp` est déjà enregistré sous
+`rapport-conseil-<NomClient>-<YYYYMMDD>.md`. Renomme-le en
+`cgp-dossier-<NomClient>-<YYYYMMDD>.md` avant de confirmer la fin de la commande,
+afin que `output_router.py` le détecte et le range dans `~/CGP/<Client>/reporting/`.

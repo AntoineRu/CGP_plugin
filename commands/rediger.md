@@ -22,3 +22,15 @@ For comptes-rendus: always append the confidentiality footer from cgp-persona re
 If the input contains identifying personal data (full name + precise personal or financial details), display the RGPD anonymization reminder from cgp-persona before proceeding.
 
 Deliver the complete document ready to use, followed by a short list of any fields the CGP still needs to fill in before sending.
+
+---
+
+## Sauvegarde
+
+À la fin de ta réponse, propose à l'utilisateur :
+> "Voulez-vous sauvegarder cette réponse ? (oui / non)"
+
+Si oui : écris le contenu complet de ta réponse dans un fichier nommé
+`cgp-rediger-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant.
+Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
+dans `~/CGP/<Client>/lettres/`.

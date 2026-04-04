@@ -14,3 +14,16 @@ If $ARGUMENTS is empty, ask for the client's name and any available information 
 Generate the complete patrimonial assessment template from the bilan skill, pre-filling all fields that are available from the conversation. Mark missing fields as [À compléter]. List all missing critical information at the end.
 
 If the user wants a deep analytical diagnosis (not just the template), suggest launching the analyste-patrimonial agent.
+
+---
+
+## Sauvegarde
+
+À la fin de ta réponse, propose à l'utilisateur :
+> "Voulez-vous sauvegarder cette réponse ? (oui / non)"
+
+Si oui : écris le contenu complet de ta réponse dans un fichier nommé
+`cgp-bilan-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant
+(remplace `<NomClient>` par le nom du client sans espaces, `<YYYYMMDD>` par la date du jour).
+Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
+dans `~/CGP/<Client>/bilans/`.

@@ -18,3 +18,15 @@ Adapt the content to the meeting type (annual review, product recommendation, fi
 Always include the appropriate compliance disclaimer from cgp-persona at the end if financial products or investment advice are involved.
 
 If the input contains identifying personal data (full name + precise financial or personal details), display the RGPD anonymization reminder from cgp-persona before proceeding.
+
+---
+
+## Sauvegarde
+
+À la fin de ta réponse, propose à l'utilisateur :
+> "Voulez-vous sauvegarder cette réponse ? (oui / non)"
+
+Si oui : écris le contenu complet de ta réponse dans un fichier nommé
+`cgp-rdv-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant.
+Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
+dans `~/CGP/<Client>/rendez-vous/`.
