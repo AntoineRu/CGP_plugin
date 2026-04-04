@@ -165,7 +165,7 @@ Créer `skills/charte-graphique/SKILL.md` avec les règles extraites en Phase 3 
 - Inclure systématiquement les mentions AMF/CIF en pied de document.
 
 ## Activation du rendu Word
-Quand tu produis un document `.md` via l'outil Write, le hook `render_docx.py`
+Quand tu produis un document `.md` via l'outil Write, le hook `output_router.py`
 génère automatiquement un `.docx` adjacent en appliquant ce template.
 ```
 
@@ -176,7 +176,7 @@ mkdir -p "${CLAUDE_PLUGIN_ROOT}/skills/charte-graphique"
 
 ---
 
-## Phase 6 — Activer le hook render_docx dans `hooks.json`
+## Phase 6 — Activer le hook output_router dans `hooks.json`
 
 Lire le `hooks.json` actif et ajouter l'entrée PostToolUse pour render_docx si elle n'y est pas déjà :
 
@@ -200,7 +200,7 @@ if sys.platform == "win32":
 
 new_hook = {
     "type": "command",
-    "command": f"{venv_py} \"{plugin_root}/hooks/render_docx.py\"",
+    "command": f"{venv_py} \"{plugin_root}/hooks/output_router.py\"",
     "timeout": 15
 }
 
@@ -208,17 +208,17 @@ post = config["hooks"].setdefault("PostToolUse", [])
 
 # Vérifier si déjà présent
 already = any(
-    h.get("command", "").endswith("render_docx.py")
+    h.get("command", "").endswith("output_router.py")
     for entry in post
     for h in entry.get("hooks", [])
 )
 
 if already:
-    print("Hook render_docx déjà présent — rien à faire.")
+    print("Hook output_router déjà présent — rien à faire.")
 else:
     post.append({"matcher": "Write|Edit", "hooks": [new_hook]})
     hooks_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
-    print("Hook render_docx ajouté à hooks.json.")
+    print("Hook output_router ajouté à hooks.json.")
 PYEOF
 ```
 
@@ -237,7 +237,7 @@ Afficher :
 ║  Police titres  : [heading_font] [heading_size]pt    ║
 ║  En-tête        : [header ou "(vide)"]               ║
 ║  Pied de page   : [footer ou "(vide)"]               ║
-║  Hook Word      : ✓ activé (render_docx.py)          ║
+║  Hook Word      : ✓ activé (output_router.py)          ║
 ╚══════════════════════════════════════════════════════╝
 ```
 

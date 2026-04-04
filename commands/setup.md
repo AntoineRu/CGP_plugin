@@ -183,6 +183,19 @@ else:
 PYEOF
 ```
 
+Create the CGP productions directory tree:
+```bash
+mkdir -p "$HOME/CGP/_cabinet/veille"
+mkdir -p "$HOME/CGP/_cabinet/vulgarisation"
+mkdir -p "$HOME/CGP/_cabinet/marketing"
+mkdir -p "$HOME/CGP/_cabinet/prospection"
+```
+
+Explain to the user:
+- `~/CGP/` — racine de toutes les productions du plugin
+- `~/CGP/_cabinet/` — documents non liés à un client spécifique (veille, marketing, etc.)
+- `~/CGP/<Client>/` — créé automatiquement lors du premier enregistrement pour ce client
+
 ---
 
 ## Phase 7 — Smoke Tests
@@ -212,6 +225,13 @@ echo '{"user_prompt":"test"}' | "$VENV_PYTHON" "${CLAUDE_PLUGIN_ROOT}/hooks/anon
 ```bash
 "$VENV_PYTHON" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" list && echo "PASS" || echo "FAIL"
 ```
+
+**output_router.py — filter (fichier non-cgp) :**
+```bash
+echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/not-cgp.md"}}' \
+  | "$VENV_PYTHON" "${CLAUDE_PLUGIN_ROOT}/hooks/output_router.py" && echo "PASS" || echo "FAIL"
+```
+Attendu : PASS sans sortie (fichier non-cgp ignoré silencieusement).
 
 If any test fails, display the error output and advise the user to check that the venv was created correctly and that `requirements.txt` was installed.
 
