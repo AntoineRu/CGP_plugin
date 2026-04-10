@@ -12,8 +12,7 @@ If $ARGUMENTS is empty, ask: "Quel est le nom complet du client ? (Prénom Nom)"
 Run this command to register the client and get their pseudonym:
 
 ```bash
-VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-[ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
 "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py" register $ARGUMENTS
 ```
 
@@ -38,7 +37,6 @@ Parse the JSON result and present it clearly in French:
 
 After registering, offer to list all registered clients with:
 ```bash
-VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-[ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
 "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py" list
 ```

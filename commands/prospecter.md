@@ -26,4 +26,4 @@ For a full 3-email sequence, generate all three messages with timing notes.
 Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-prospecter-<YYYYMMDD>.md` dans le répertoire courant.
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/_cabinet/prospection/`.
+dans `CGP/Production/_cabinet/prospection/`.

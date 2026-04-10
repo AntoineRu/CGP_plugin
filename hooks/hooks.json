@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py\" encode",
+            "command": "/home/aruna/Projects/Finance/CGP-assistant-plugin/CGP/_config/venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py\" encode",
             "timeout": 5
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/fiscal_alerts.py\"",
+            "command": "/home/aruna/Projects/Finance/CGP-assistant-plugin/CGP/_config/venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/fiscal_alerts.py\"",
             "timeout": 10
           }
         ]
@@ -29,8 +29,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py\" decode",
+            "command": "/home/aruna/Projects/Finance/CGP-assistant-plugin/CGP/_config/venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py\" decode",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "/home/aruna/Projects/Finance/CGP-assistant-plugin/CGP/_config/venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/output_router.py\"",
+            "timeout": 15
           }
         ]
       }

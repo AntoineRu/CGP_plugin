@@ -15,14 +15,14 @@ Un CGP travaille sur les mêmes clients session après session. Sans persistance
 
 1. Le skill `profil-client` structure les informations client en un format standardisé (situation personnelle, financière, patrimoniale, objectifs, profil investisseur, fiscalité, notes).
 2. Ce profil structuré est sérialisé en JSON.
-3. Le script `hooks/client_store.py` écrit le JSON dans `~/.cgp-clients/<pseudo>.json`.
+3. Le script `hooks/client_store.py` écrit le JSON dans `CGP/_config/clients/<pseudo>.json`.
 4. Le fichier est keyed par **pseudonyme uniquement** — jamais par nom réel (conformité RGPD).
 5. Un champ `_meta` est ajouté automatiquement : `{saved_at, pseudo, real_name}`.
 
 ## Comment fonctionne le chargement
 
 1. La commande `/client load [nom]` appelle `client_store.py load [nom]`.
-2. Le script résout le nom (réel ou pseudo) via le registre `~/.cgp-client-registry.json`.
+2. Le script résout le nom (réel ou pseudo) via le registre `CGP/_config/client-registry.json`.
 3. Le JSON du profil est retourné et injecté dans la session comme contexte `profil-client` actif.
 4. Toutes les tâches suivantes (rédaction, analyse, bilan, rendez-vous) bénéficient immédiatement de ce contexte.
 
@@ -46,9 +46,9 @@ Dès qu'une session porte sur un client connu :
 
 ## Conformité RGPD
 
-- Les fichiers sont stockés dans `~/.cgp-clients/` sur la machine locale du CGP.
+- Les fichiers sont stockés dans `CGP/_config/clients/` au sein du projet, sur la machine locale du CGP.
 - Les noms de fichiers utilisent uniquement le **pseudonyme** (`<pseudo>.json`), jamais le nom réel.
-- La correspondance pseudonyme ↔ nom réel est gérée séparément par `hooks/anonymize.py` dans `~/.cgp-client-registry.json`.
+- La correspondance pseudonyme ↔ nom réel est gérée séparément par `hooks/anonymize.py` dans `CGP/_config/client-registry.json`.
 - Aucune donnée client n'est transmise à des services externes par ce mécanisme.
 
 ## Intégration avec les autres skills
@@ -66,6 +66,6 @@ Les données chargées servent de contexte pour :
 
 - Script de persistance : `hooks/client_store.py`
 - Script d'anonymisation : `hooks/anonymize.py`
-- Répertoire de stockage : `~/.cgp-clients/`
-- Registre d'anonymisation : `~/.cgp-client-registry.json`
+- Répertoire de stockage : `CGP/_config/clients/`
+- Registre d'anonymisation : `CGP/_config/client-registry.json`
 - Format du profil : voir `skills/profil-client/SKILL.md` et `skills/profil-client/assets/template-profil.md`

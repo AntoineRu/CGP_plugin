@@ -5,7 +5,7 @@ argument-hint: '[save|load|list|delete] [nom du client]'
 
 # Commande /client — Mémoire persistante des profils clients
 
-Cette commande permet de sauvegarder et recharger les profils clients entre les sessions Claude Code. Les profils sont stockés dans `~/.cgp-clients/` sous forme de fichiers JSON anonymisés (keyed par pseudonyme RGPD).
+Cette commande permet de sauvegarder et recharger les profils clients entre les sessions Claude Code. Les profils sont stockés dans `CGP/_config/clients/` sous forme de fichiers JSON anonymisés (keyed par pseudonyme RGPD).
 
 ## Routing par sous-commande
 
@@ -20,27 +20,24 @@ Analyse `$ARGUMENTS` pour déterminer la sous-commande :
 1. Charge le skill `profil-client` pour extraire et structurer toutes les informations client disponibles dans la conversation en format JSON structuré.
 2. Identifie le pseudonyme du client via le registre d'anonymisation :
    ```bash
-   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
    "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py" list
    ```
    Cherche la correspondance nom réel ↔ pseudonyme pour le client concerné. Si le client n'est pas encore enregistré, utiliser d'abord :
    ```bash
-   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
    "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py" register "Prénom Nom"
    ```
 3. Sérialise le profil structuré en JSON (tous les champs du format `profil-client` : situation personnelle, financière, patrimoine, objectifs, profil investisseur, situation fiscale, notes).
 4. Sauvegarde via :
    ```bash
-   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
    echo '<json_du_profil>' | "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" save <pseudo>
    ```
 5. Confirme à l'utilisateur :
    - "Profil de [nom réel] sauvegardé."
-   - Fichier pseudonymisé (copie de travail IA) : `~/.cgp-clients/<pseudo>.json`
-   - Fichier privé (noms réels, lisible par vous) : `~/cgp-clients-private/<nom_réel>.json`
+   - Fichier pseudonymisé (copie de travail IA) : `CGP/_config/clients/<pseudo>.json`
+   - Fichier privé (noms réels, lisible par vous) : `CGP/_config/clients-private/<nom_réel>.json`
    - Si `private_error` est présent dans la réponse JSON, afficher un avertissement : "La copie privée n'a pas pu être écrite : [erreur]"
 
 ---
@@ -51,8 +48,7 @@ Analyse `$ARGUMENTS` pour déterminer la sous-commande :
 
 1. Exécute :
    ```bash
-   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
    "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" load "[nom]"
    ```
    `[nom]` peut être le nom réel ou le pseudonyme — le script résout automatiquement.
@@ -68,8 +64,7 @@ Analyse `$ARGUMENTS` pour déterminer la sous-commande :
 
 1. Exécute :
    ```bash
-   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
    "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" list
    ```
 2. Affiche un tableau formaté en Markdown :
@@ -90,8 +85,7 @@ Analyse `$ARGUMENTS` pour déterminer la sous-commande :
    "Vous êtes sur le point de supprimer définitivement le profil de [nom]. Cette action est irréversible. Confirmez-vous ? (oui/non)"
 2. Si confirmé, résout le pseudonyme si besoin (via `anonymize.py list`), puis exécute :
    ```bash
-   VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-   [ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+   VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
    "$VENV_PY" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" delete "[pseudo]"
    ```
 3. Confirme : "Profil de [nom] supprimé."
@@ -113,8 +107,8 @@ Afficher le résumé d'utilisation :
 
 ## Notes techniques
 
-- **Python** : détecté automatiquement via `${CLAUDE_PLUGIN_ROOT}/../.venv/` (Linux/macOS: `bin/python3`, Windows: `Scripts/python.exe`)
-- **Stockage** : `~/.cgp-clients/<pseudo>.json` — jamais de nom réel dans le nom de fichier
-- **Registre anonymisation** : `~/.cgp-client-registry.json` (géré par `anonymize.py`)
+- **Python** : chemin résolu depuis `${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json` (écrit par `/setup`)
+- **Stockage** : `CGP/_config/clients/<pseudo>.json` — jamais de nom réel dans le nom de fichier
+- **Registre anonymisation** : `CGP/_config/client-registry.json` (géré par `anonymize.py`)
 - **En cas d'erreur JSON** du script : afficher le message d'erreur retourné et proposer une action corrective
 - **Skill requis** : charger `profil-client` lors des opérations save et load pour garantir la cohérence du format

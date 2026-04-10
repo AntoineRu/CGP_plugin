@@ -33,4 +33,4 @@ Deliver the complete document ready to use, followed by a short list of any fiel
 Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-rediger-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant.
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/<Client>/lettres/`.
+dans `CGP/Production/Clients/<Client>/lettres/`.

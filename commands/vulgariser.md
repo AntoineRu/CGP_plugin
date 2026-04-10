@@ -26,4 +26,4 @@ Adapt the language and analogies to the client's profile if known. Always end wi
 Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-vulgariser-<YYYYMMDD>.md` dans le répertoire courant.
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/_cabinet/vulgarisation/`.
+dans `CGP/Production/_cabinet/vulgarisation/`.

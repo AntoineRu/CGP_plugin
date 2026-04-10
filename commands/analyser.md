@@ -28,4 +28,4 @@ Always end with the appropriate compliance disclaimer from cgp-persona if invest
 Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-analyser-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant.
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/<Client>/analyses/`.
+dans `CGP/Production/Clients/<Client>/analyses/`.

@@ -29,4 +29,4 @@ If the input contains identifying personal data (full name + precise financial f
 Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-reporting-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant.
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/<Client>/reporting/`.
+dans `CGP/Production/Clients/<Client>/reporting/`.

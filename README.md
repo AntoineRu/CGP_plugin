@@ -36,7 +36,7 @@ Plugin [Claude Code](https://claude.ai/code) conçu pour les **Conseillers en Ge
 | `/charte` | Configure le template Word du cabinet — génère `.docx` stylé automatiquement à chaque sauvegarde | — |
 | `/client` | Charge ou sauvegarde le profil complet d'un client en mémoire persistante | — |
 | `/nouveau-client` | Enregistre un nouveau client avec pseudonymisation RGPD automatique | — |
-| `/conversation-analyst` | Archive la session courante : JSON structuré + référence markdown dans `~/cgp-sessions/` | — |
+| `/conversation-analyst` | Archive la session courante : JSON structuré + référence markdown dans `CGP/_config/sessions/` | — |
 
 **3 agents spécialisés** travaillent en autonomie sur les tâches complexes :
 - `redacteur-cgp` — rédaction longue avec conformité AMF/MIF II automatique
@@ -49,7 +49,7 @@ Plugin [Claude Code](https://claude.ai/code) conçu pour les **Conseillers en Ge
 
 - [Claude Code](https://claude.ai/code) installé et configuré
 - Un abonnement Claude actif (Claude.ai Pro ou API)
-- Python 3.8+ (détecté et configuré automatiquement par `/setup`)
+- Python 3.12+ et `uv` (détecté et configuré automatiquement par `/setup`)
 
 ---
 
@@ -89,7 +89,7 @@ Redémarrez Claude Code, puis lancez :
 /setup
 ```
 
-Cette commande détecte Python, crée l'environnement virtuel, configure les hooks RGPD et vérifie l'installation. **À faire une seule fois après l'installation ou après un changement d'environnement Python.**
+Cette commande détecte/installe `uv`, crée l'environnement virtuel dans `CGP/_config/venv/`, configure les hooks RGPD, crée tous les répertoires de données (`CGP/_config/`, `CGP/Production/`) et vérifie l'installation. **À faire une seule fois après l'installation ou après un changement d'environnement Python.**
 
 ### Étape 4 — Vérifier les commandes
 
@@ -194,8 +194,8 @@ Enregistre un nouveau client dans le système de pseudonymisation RGPD. Attribue
 Charge ou sauvegarde le profil complet d'un client (situation familiale, patrimoine, objectifs, notes de session).
 
 Chaque sauvegarde écrit deux fichiers simultanément :
-- `~/.cgp-clients/<pseudo>.json` — copie pseudonymisée (utilisée par le système IA)
-- `~/cgp-clients-private/<nom_réel>.json` — copie décodée avec les vrais noms, consultable directement
+- `CGP/_config/clients/<pseudo>.json` — copie pseudonymisée (utilisée par le système IA)
+- `CGP/_config/clients-private/<nom_réel>.json` — copie décodée avec les vrais noms, consultable directement
 
 ```
 /client load Martin Dupont      ← début de session
@@ -204,8 +204,8 @@ Chaque sauvegarde écrit deux fichiers simultanément :
 
 ### `/conversation-analyst`
 Analyse et archive la session courante en deux fichiers persistants :
-- `~/cgp-sessions/archive/<date>_<session_name>.json` — enregistrement structuré (tons, décisions, actions, artefacts produits)
-- `~/cgp-sessions/references/<date>_<session_name>_reference.md` — document de référence avec concepts, sources et fils de recherche
+- `CGP/_config/sessions/archive/<date>_<session_name>.json` — enregistrement structuré (tons, décisions, actions, artefacts produits)
+- `CGP/_config/sessions/references/<date>_<session_name>_reference.md` — document de référence avec concepts, sources et fils de recherche
 
 Le nom de session est dérivé automatiquement du **vrai nom du client** (résolu depuis le registre RGPD) ou du sujet principal si aucun client n'est impliqué.
 
@@ -216,14 +216,14 @@ Le nom de session est dérivé automatiquement du **vrai nom du client** (résol
 ```
 
 ### `/charte [chemin/vers/template.docx]`
-Configure la charte graphique du cabinet à partir d'un template Word. Une fois configuré, chaque commande peut sauvegarder sa réponse en `.docx` (stylé avec votre template) dans `~/CGP/`.
+Configure la charte graphique du cabinet à partir d'un template Word. Une fois configuré, chaque commande peut sauvegarder sa réponse en `.docx` (stylé avec votre template) dans `CGP/Production/`.
 
 ```
 /charte /home/user/Cabinet/template.docx
 ```
 
 ### `/setup`
-Configuration initiale du plugin. Détecte Python, crée le venv, configure les hooks, initialise le registre RGPD et lance les tests de vérification. Compatible Linux, macOS, WSL et Windows natif.
+Configuration initiale du plugin. Détecte/installe `uv`, crée le venv, configure les hooks, initialise le registre RGPD et lance les tests de vérification. Compatible Linux, macOS, WSL et Windows natif.
 
 ```
 /setup
@@ -237,6 +237,7 @@ Configuration initiale du plugin. Détecte Python, crée le venv, configure les 
 cgp-assistant/
 ├── .claude-plugin/
 │   └── plugin.json              # Manifeste du plugin
+├── marketplace.json             # Métadonnées pour installation via GitHub
 ├── commands/                    # 15 commandes slash
 │   ├── setup.md                 # Configuration initiale (à lancer en premier)
 │   ├── charte.md                # Configuration charte graphique + template Word
@@ -250,7 +251,7 @@ cgp-assistant/
 │   ├── cgp-persona/             # Fondation : ton, conformité AMF/CIF, vocabulaire
 │   ├── profil-client/           # Fondation : structure et collecte du profil client
 │   ├── client-memory/           # Mémoire persistante des profils clients
-│   ├── conversation-analyst/    # Analyse et archivage de session dans ~/cgp-sessions/
+│   ├── conversation-analyst/    # Analyse et archivage de session dans CGP/_config/sessions/
 │   ├── preparer-rdv/            # Logique préparation rendez-vous
 │   ├── rediger/                 # Formats et règles de rédaction
 │   ├── analyser/                # Comparatifs et grilles d'analyse produits
@@ -268,35 +269,64 @@ cgp-assistant/
     ├── anonymize.py             # Pseudonymisation RGPD (UserPromptSubmit + PostToolUse)
     ├── fiscal_alerts.py         # Alertes échéances fiscales (UserPromptSubmit, 1×/jour)
     ├── client_store.py          # Lecture/écriture profils clients (dual store)
-    ├── output_router.py         # Conversion .md → .docx + routage dans ~/CGP/ (PostToolUse)
+    ├── output_router.py         # Conversion .md → .docx + routage dans CGP/Production/ (PostToolUse)
+    ├── config.py                # Résolution centralisée des chemins (via project_config.json)
+    ├── project_config.json      # Chemins absolus du projet (gitignored, écrit par /setup)
     ├── hooks.json               # Configuration des événements Claude Code (gitignored)
     ├── hooks.json.example       # Template Linux / macOS / WSL
     └── hooks.json.windows.example  # Template Windows natif
+```
+
+### Données du plugin (créées par `/setup`)
+
+Toutes les données vivent dans `CGP/` à la racine du projet Claude Code :
+
+```
+CGP/
+├── _config/                         # Données internes du plugin
+│   ├── venv/                        # Environnement Python (créé par uv)
+│   ├── client-registry.json         # Mapping RGPD nom réel ↔ pseudonyme
+│   ├── clients/                     # Profils pseudonymisés (copie IA)
+│   ├── clients-private/             # Profils décodés (consultation CGP)
+│   ├── sessions/                    # Archives conversation-analyst
+│   └── last-fiscal-alert            # Stamp date alertes fiscales
+└── Production/
+    ├── _cabinet/                    # Productions non liées à un client
+    │   ├── veille/
+    │   ├── vulgarisation/
+    │   ├── marketing/
+    │   └── prospection/
+    └── Clients/<Client>/            # Un sous-dossier par client
+        ├── bilans/
+        ├── lettres/
+        ├── analyses/
+        ├── rendez-vous/
+        └── reporting/
 ```
 
 ---
 
 ## Hooks — Traitements automatiques
 
-Quatre scripts s'exécutent silencieusement à chaque session sans intervention de l'utilisateur :
+Quatre scripts s'exécutent silencieusement à chaque session sans intervention de l'utilisateur. Tous résolvent leurs chemins via `hooks/config.py` → `project_config.json` (écrit par `/setup`) :
 
 | Hook | Événement | Rôle |
 |---|---|---|
 | `anonymize.py encode` | Avant chaque prompt | Remplace les vrais noms clients par leurs pseudonymes RGPD |
 | `anonymize.py decode` | Après chaque écriture de fichier | Restaure les vrais noms dans les documents produits |
 | `fiscal_alerts.py` | Avant le premier prompt de la journée | Rappelle les échéances fiscales imminentes |
-| `output_router.py` | Après chaque écriture de fichier `.md` préfixé `cgp-` | Convertit en `.docx` et range dans `~/CGP/<Client>/<type>/` |
+| `output_router.py` | Après chaque écriture de fichier `.md` préfixé `cgp-` | Convertit en `.docx` et range dans `CGP/Production/` |
 
-**Emplacements de données persistantes :**
+**Emplacements de données (dans le projet) :**
 
 | Répertoire | Rôle |
 |---|---|
-| `~/.cgp-clients/` | Profils pseudonymisés — utilisés par l'IA |
-| `~/cgp-clients-private/` | Profils décodés — consultation directe par le CGP |
-| `~/.cgp-client-registry.json` | Table de correspondance nom réel ↔ pseudonyme |
-| `~/CGP/_cabinet/<type>/` | Productions cabinet (veille, marketing, prospection…) |
-| `~/CGP/<Client>/<type>/` | Productions client (bilans, lettres, analyses…) |
-| `~/cgp-sessions/` | Archives de session — JSON + markdown |
+| `CGP/_config/clients/` | Profils pseudonymisés — utilisés par l'IA |
+| `CGP/_config/clients-private/` | Profils décodés — consultation directe par le CGP |
+| `CGP/_config/client-registry.json` | Table de correspondance nom réel ↔ pseudonyme |
+| `CGP/_config/sessions/` | Archives de session — JSON + markdown |
+| `CGP/Production/_cabinet/<type>/` | Productions cabinet (veille, marketing, prospection…) |
+| `CGP/Production/Clients/<Client>/<type>/` | Productions client (bilans, lettres, analyses…) |
 
 ---
 

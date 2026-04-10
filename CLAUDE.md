@@ -23,8 +23,8 @@ Réponds toujours dans la langue de la question posée. Si la question est en fr
 
 | Commande | Objectif |
 |---|---|
-| `/setup` | **À lancer en premier** — détecte Python, crée le venv, configure les hooks, vérifie l'installation |
-| `/charte [template.docx]` | Configure la charte graphique du cabinet — active la conversion auto `.md` → `.docx` stylé dans `~/CGP/` |
+| `/setup` | **À lancer en premier** — détecte/installe `uv`, crée le venv dans `CGP/_config/venv/`, configure les hooks, crée les répertoires de données, vérifie l'installation |
+| `/charte [template.docx]` | Configure la charte graphique du cabinet — active la conversion auto `.md` → `.docx` stylé |
 | `/rdv [client] [objet]` | Préparer un rendez-vous client (ordre du jour, points à aborder, objections probables) |
 | `/rediger [type] [client]` | Rédiger un document professionnel (lettre de mission, CR de RDV, lettre de suivi, email) |
 | `/analyser [situation ou produit]` | Analyser une situation patrimoniale ou comparer des produits financiers |
@@ -38,7 +38,7 @@ Réponds toujours dans la langue de la question posée. Si la question est en fr
 | `/client save [Prénom Nom]` | Sauvegarder le profil et les notes du client en fin de session |
 | `/nouveau-client [Prénom Nom]` | Enregistrer un nouveau client avec pseudonymisation RGPD |
 | `/dossier [client]` | Générer une analyse patrimoniale complète + rapport de conseil en une commande |
-| `/conversation-analyst` | Analyser et archiver la session courante — JSON structuré + référence markdown dans `~/cgp-sessions/` |
+| `/conversation-analyst` | Analyser et archiver la session courante — JSON structuré + référence markdown dans `CGP/_config/sessions/` |
 
 ## Agents spécialisés
 
@@ -64,15 +64,22 @@ Ces agents sont lancés automatiquement par les commandes quand la tâche le né
 - **`reporting`** — Template de reporting trimestriel, indicateurs de suivi.
 - **`prospecter`** — Séquences de prospection types, messages d'approche.
 - **`client-memory`** — Gestion de la mémoire persistante des profils clients.
-- **`conversation-analyst`** — Analyse et archive la conversation courante : JSON structuré + document de référence markdown, sauvegardés dans `~/cgp-sessions/`. Le nom de session est dérivé du vrai nom du client (via le registre RGPD) ou du sujet principal.
+- **`conversation-analyst`** — Analyse et archive la conversation courante : JSON structuré + document de référence markdown, sauvegardés dans `CGP/_config/sessions/`. Le nom de session est dérivé du vrai nom du client (via le registre RGPD) ou du sujet principal.
 
 ## Hooks actifs en arrière-plan
 
-Ces traitements s'exécutent automatiquement et silencieusement :
+Ces traitements s'exécutent automatiquement et silencieusement. Tous les scripts résolvent leurs chemins via `hooks/config.py` → `project_config.json` (écrit par `/setup`).
 
 - **Anonymisation RGPD** (`anonymize.py`) — Remplace les vrais noms clients par des pseudonymes avant envoi, les restitue dans l'affichage. Transparent pour l'utilisateur.
 - **Alertes fiscales** (`fiscal_alerts.py`) — Détecte les échéances fiscales imminentes dans les messages et remonte une alerte proactive si nécessaire.
-- **Routage et conversion** (`output_router.py`) — Après chaque `Write`/`Edit`, si le fichier est un `.md` préfixé `cgp-`, le convertit en `.docx` et le range dans `~/CGP/<Client>/<type>/` (ou `~/CGP/_cabinet/<type>/` pour les productions cabinet). Requiert `/charte` pour appliquer un template Word ; fonctionne aussi sans template.
+- **Routage et conversion** (`output_router.py`) — Après chaque `Write`/`Edit`, si le fichier est un `.md` préfixé `cgp-`, le convertit en `.docx` et le range dans `CGP/Production/Clients/<Client>/<type>/` (ou `CGP/Production/_cabinet/<type>/` pour les productions cabinet). Requiert `/charte` pour appliquer un template Word ; fonctionne aussi sans template.
+
+### Événements hook
+
+| Événement | Scripts déclenchés |
+|---|---|
+| **UserPromptSubmit** | `anonymize.py encode` + `fiscal_alerts.py` |
+| **PostToolUse** (Write\|Edit) | `anonymize.py decode` + `output_router.py` |
 
 ## Contraintes de conformité
 
@@ -116,18 +123,49 @@ Puis fournir les informations client. Le skill `profil-client` les structure aut
 ### Stockage dual après `/client save`
 
 Chaque sauvegarde écrit **deux fichiers** :
-- `~/.cgp-clients/<pseudo>.json` — copie pseudonymisée (utilisée par le système IA)
-- `~/cgp-clients-private/<nom_réel>.json` — copie décodée avec les vrais noms, consultable directement par le CGP
+- `CGP/_config/clients/<pseudo>.json` — copie pseudonymisée (utilisée par le système IA)
+- `CGP/_config/clients-private/<nom_réel>.json` — copie décodée avec les vrais noms, consultable directement par le CGP
 
 ### Rappel RGPD
 Si l'utilisateur fournit un nom complet + données financières précises dans une même requête, afficher discrètement :
 > ⚠️ *Rappel RGPD : le système pseudonymise automatiquement les noms avant traitement. Préférez les montants arrondis pour les données financières sensibles.*
+
+## Données du plugin (créées par `/setup`)
+
+Toutes les données vivent dans `CGP/` à la racine du projet Claude Code de l'utilisateur :
+
+```
+CGP/
+├── _config/                         ← données internes du plugin
+│   ├── venv/                        ← environnement Python (créé par uv)
+│   ├── client-registry.json         ← mapping RGPD nom réel ↔ pseudonyme
+│   ├── clients/<pseudo>.json        ← profils pseudonymisés (copie IA)
+│   ├── clients-private/<réel>.json  ← profils décodés (consultation CGP)
+│   ├── sessions/                    ← archives conversation-analyst
+│   │   ├── archive/                 ← JSON structurés
+│   │   ├── references/              ← documents markdown
+│   │   └── INDEX.md                 ← index des sessions
+│   └── last-fiscal-alert            ← stamp date (1×/jour)
+└── Production/
+    ├── _cabinet/                    ← productions non liées à un client
+    │   ├── veille/
+    │   ├── vulgarisation/
+    │   ├── marketing/
+    │   └── prospection/
+    └── Clients/<Client>/            ← un sous-dossier par client
+        ├── bilans/
+        ├── lettres/
+        ├── analyses/
+        ├── rendez-vous/
+        └── reporting/
+```
 
 ## Structure des fichiers du plugin
 
 ```
 cgp-assistant/
 ├── CLAUDE.md                        ← ce fichier
+├── marketplace.json                 ← métadonnées pour installation via GitHub
 ├── .claude-plugin/plugin.json       ← manifeste du plugin
 ├── skills/                          ← connaissances métier chargées par les commandes
 │   ├── cgp-persona/SKILL.md         ← persona CGP, compliance, vocabulaire
@@ -145,5 +183,14 @@ cgp-assistant/
 │   └── conversation-analyst/        ← archivage et analyse de session
 ├── commands/                        ← définitions des commandes /slash
 ├── agents/                          ← agents spécialisés (redacteur, analyste, veilleur)
-└── hooks/                           ← traitements automatiques (RGPD, alertes, routage)
+└── hooks/                           ← traitements automatiques
+    ├── config.py                    ← résolution centralisée des chemins
+    ├── project_config.json          ← chemins absolus (gitignored, écrit par /setup)
+    ├── anonymize.py                 ← pseudonymisation RGPD
+    ├── fiscal_alerts.py             ← alertes échéances fiscales
+    ├── client_store.py              ← lecture/écriture profils clients
+    ├── output_router.py             ← conversion .md → .docx + routage
+    ├── hooks.json                   ← config événements (gitignored)
+    ├── hooks.json.example           ← template Linux/macOS/WSL
+    └── hooks.json.windows.example   ← template Windows natif
 ```

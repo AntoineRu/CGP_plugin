@@ -29,4 +29,4 @@ If the input contains identifying personal data (full name + precise financial o
 Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-rdv-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant.
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/<Client>/rendez-vous/`.
+dans `CGP/Production/Clients/<Client>/rendez-vous/`.

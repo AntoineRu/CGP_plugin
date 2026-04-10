@@ -9,7 +9,7 @@ import sys
 import datetime
 from pathlib import Path
 
-LAST_RUN_FILE = Path.home() / ".cgp-last-fiscal-alert"
+from config import fiscal_alert_stamp
 
 # (month, day, label, concerned_profiles)
 DEADLINES = [
@@ -26,7 +26,8 @@ DEADLINES = [
 def already_ran_today() -> bool:
     """Return True if the alert has already been checked today."""
     try:
-        content = LAST_RUN_FILE.read_text().strip()
+        stamp = fiscal_alert_stamp()
+        content = stamp.read_text().strip()
         return content == datetime.date.today().isoformat()
     except (FileNotFoundError, OSError):
         return False
@@ -35,7 +36,9 @@ def already_ran_today() -> bool:
 def mark_ran_today():
     """Write today's date to the last-run file."""
     try:
-        LAST_RUN_FILE.write_text(datetime.date.today().isoformat())
+        stamp = fiscal_alert_stamp()
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        stamp.write_text(datetime.date.today().isoformat())
     except OSError:
         pass  # Non-fatal — worst case we re-check tomorrow
 

@@ -30,8 +30,7 @@ Si introuvable, arrêter et afficher :
 
 Vérifier si python-docx est disponible dans le venv :
 ```bash
-VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3"
-[ -f "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" ] && VENV_PY="${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe"
+VENV_PY=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['venv_python'])")
 "$VENV_PY" -c "import docx; print('OK')" 2>/dev/null || echo "ABSENT"
 ```
 
@@ -193,10 +192,9 @@ if not hooks_path.exists():
 
 config = json.loads(hooks_path.read_text(encoding="utf-8"))
 
-venv_py = str(plugin_root / ".." / ".venv" / "bin" / "python3")
 import sys
-if sys.platform == "win32":
-    venv_py = str(plugin_root / ".." / ".venv" / "Scripts" / "python.exe")
+project_config = json.loads((plugin_root / "hooks" / "project_config.json").read_text(encoding="utf-8"))
+venv_py = project_config["venv_python"]
 
 new_hook = {
     "type": "command",

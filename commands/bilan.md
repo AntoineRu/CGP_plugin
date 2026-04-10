@@ -26,4 +26,4 @@ Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-bilan-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant
 (remplace `<NomClient>` par le nom du client sans espaces, `<YYYYMMDD>` par la date du jour).
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/<Client>/bilans/`.
+dans `CGP/Production/Clients/<Client>/bilans/`.

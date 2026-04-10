@@ -1,0 +1,20 @@
+{
+  "owner": {
+    "name": "Aruna"
+  },
+  "plugins": [
+    {
+      "name": "cgp-assistant",
+      "display_name": "CGP Assistant",
+      "description": "Assistant IA pour Conseillers en Gestion de Patrimoine — rédaction, analyse patrimoniale, veille réglementaire, gestion clients RGPD.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Aruna"
+      },
+      "license": "MIT",
+      "repository": "https://github.com/AntoineRu/CGP_plugin",
+      "keywords": ["cgp", "patrimoine", "finance", "rgpd", "french"],
+      "setup_command": "/setup"
+    }
+  ]
+}

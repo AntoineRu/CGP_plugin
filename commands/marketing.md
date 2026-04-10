@@ -25,4 +25,4 @@ If the user needs topic ideas, consult references/idees-sujets.md from the marke
 Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-marketing-<YYYYMMDD>.md` dans le répertoire courant.
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/_cabinet/marketing/`.
+dans `CGP/Production/_cabinet/marketing/`.

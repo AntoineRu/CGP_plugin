@@ -3,8 +3,8 @@
 PostToolUse hook — output_router.py
 
 Triggered on every Write/Edit. If the written file is a .md matching the
-cgp-* convention, converts it to .docx and moves it to ~/CGP/<routing>/,
-then deletes the source .md.
+cgp-* convention, converts it to .docx and moves it to CGP/Production/<routing>/,
+then deletes the source .md. Paths resolved via config.py.
 
 Stdin payload: {"tool_name": "Write", "tool_input": {"file_path": "..."}, ...}
 Stdout: nothing (passive hook)
@@ -15,6 +15,8 @@ import json
 import pathlib
 import re
 import sys
+
+from config import cabinet_dir, clients_production_dir, registry_path as _registry_path
 
 # Files to route must have this prefix
 CGP_PREFIX = "cgp-"
@@ -89,11 +91,11 @@ def detect_type(stem: str) -> tuple[str, bool]:
 def detect_client(md_content: str) -> str | None:
     """Search md_content for known real names from the RGPD registry.
     Returns the real name (for folder naming) or None if not found."""
-    registry_path = pathlib.Path.home() / ".cgp-client-registry.json"
-    if not registry_path.exists():
+    rp = _registry_path()
+    if not rp.exists():
         return None
     try:
-        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        registry = json.loads(rp.read_text(encoding="utf-8"))
     except Exception:
         return None
     real_names = list(registry.get("real_to_pseudo", {}).keys())
@@ -197,13 +199,12 @@ def main() -> None:
     client_name = None if is_cabinet else detect_client(md_content)
 
     # Routing
-    cgp_root = pathlib.Path.home() / "CGP"
     if is_cabinet or client_name is None:
-        target_dir = cgp_root / "_cabinet" / subfolder
+        target_dir = cabinet_dir() / subfolder
     else:
         # Sanitise client name for filesystem
         safe_name = re.sub(r"[^\w\s\-]", "", client_name).strip()
-        target_dir = cgp_root / safe_name / subfolder
+        target_dir = clients_production_dir() / safe_name / subfolder
 
     target_dir.mkdir(parents=True, exist_ok=True)
 

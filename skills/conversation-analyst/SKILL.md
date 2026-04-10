@@ -28,7 +28,11 @@ Scan the conversation for any client name (real or pseudonym). A client is invol
 
 ### Step 2 — Resolve pseudonym → real name
 
-If a pseudonym was found, read `~/.cgp-client-registry.json` using the **Read** tool. In the `pseudo_to_real` object, look up the pseudonym to get the real name.
+If a pseudonym was found, resolve the registry path and read it:
+```bash
+REGISTRY=$(python3 -c "import json; d=json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['project_dir']; print(d+'/CGP/_config/client-registry.json')")
+```
+Read the registry file using the **Read** tool. In the `pseudo_to_real` object, look up the pseudonym to get the real name.
 
 Example registry:
 ```json
@@ -64,24 +68,28 @@ If no client was involved, derive from the primary intent/topic (e.g. `veille-pi
 After generating both artifacts, **write them to the CGP sessions directory** using these rules:
 
 ### Directory
-All session files are saved under `~/cgp-sessions/` (the user's home directory — absolute path, independent of the current working directory). Create subdirectories if they do not exist:
-- `~/cgp-sessions/archive/`
-- `~/cgp-sessions/references/`
+All session files are saved under `CGP/_config/sessions/` relative to the project root. The project root is stored in `${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json`. Create subdirectories if they do not exist:
+- `<PROJECT_DIR>/CGP/_config/sessions/archive/`
+- `<PROJECT_DIR>/CGP/_config/sessions/references/`
 
-To resolve `~`, use the Bash tool: `echo $HOME` → gives the absolute home path. Then construct paths as `<HOME>/cgp-sessions/archive/` etc.
+To resolve the project directory, read `project_config.json`:
+```bash
+PROJECT_DIR=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['project_dir'])")
+```
+Then construct paths as `$PROJECT_DIR/CGP/_config/sessions/archive/` etc.
 
 ### File naming
 Derive the session name from `session_metadata.session_name` and the date from `session_metadata.date`.
 
 | Artifact | Filename pattern |
 |----------|-----------------|
-| JSON (Artifact 1) | `~/cgp-sessions/archive/<date>_<session_name>.json` |
-| Markdown reference (Artifact 2) | `~/cgp-sessions/references/<date>_<session_name>_reference.md` |
+| JSON (Artifact 1) | `<PROJECT_DIR>/CGP/_config/sessions/archive/<date>_<session_name>.json` |
+| Markdown reference (Artifact 2) | `<PROJECT_DIR>/CGP/_config/sessions/references/<date>_<session_name>_reference.md` |
 
-Example: `~/cgp-sessions/archive/2026-04-02_martin-dupont.json` and `~/cgp-sessions/references/2026-04-02_veille-pinel_reference.md`
+Example: `<PROJECT_DIR>/CGP/_config/sessions/archive/2026-04-02_martin-dupont.json` and `<PROJECT_DIR>/CGP/_config/sessions/references/2026-04-02_veille-pinel_reference.md`
 
 ### Index file
-Also maintain `~/cgp-sessions/INDEX.md` — append one line per session in this format:
+Also maintain `<PROJECT_DIR>/CGP/_config/sessions/INDEX.md` — append one line per session in this format:
 ```
 | <date> | <session_name> | <primary_intent> | <compressed_summary first sentence> |
 ```
@@ -94,13 +102,16 @@ If `INDEX.md` does not exist, create it with this header first:
 ```
 
 ### Procedure
-1. Run `echo $HOME` via the **Bash** tool to get the absolute home directory path.
-2. If a client pseudonym was detected in the conversation, use the **Read** tool on `~/.cgp-client-registry.json` and look up the real name in `pseudo_to_real`. Slugify the real name as the `session_name`. Otherwise derive `session_name` from the primary topic.
+1. Resolve the project directory:
+   ```bash
+   PROJECT_DIR=$(python3 -c "import json; print(json.load(open('${CLAUDE_PLUGIN_ROOT}/hooks/project_config.json'))['project_dir'])")
+   ```
+2. If a client pseudonym was detected in the conversation, use the **Read** tool on `$PROJECT_DIR/CGP/_config/client-registry.json` and look up the real name in `pseudo_to_real`. Slugify the real name as the `session_name`. Otherwise derive `session_name` from the primary topic.
 3. Generate both artifacts in memory (see schemas below).
-4. Use the **Bash** tool to create missing directories: `mkdir -p $HOME/cgp-sessions/archive $HOME/cgp-sessions/references`
-5. Use the **Write** tool to save the JSON file to `<HOME>/cgp-sessions/archive/<date>_<session_name>.json`.
-6. Use the **Write** tool to save the markdown reference file to `<HOME>/cgp-sessions/references/<date>_<session_name>_reference.md`.
-7. Use **Read** to check if `<HOME>/cgp-sessions/INDEX.md` exists, then **Write** or **Edit** to append the new row.
+4. Use the **Bash** tool to create missing directories: `mkdir -p "$PROJECT_DIR/CGP/_config/sessions/archive" "$PROJECT_DIR/CGP/_config/sessions/references"`
+5. Use the **Write** tool to save the JSON file to `$PROJECT_DIR/CGP/_config/sessions/archive/<date>_<session_name>.json`.
+6. Use the **Write** tool to save the markdown reference file to `$PROJECT_DIR/CGP/_config/sessions/references/<date>_<session_name>_reference.md`.
+7. Use **Read** to check if `$PROJECT_DIR/CGP/_config/sessions/INDEX.md` exists, then **Write** or **Edit** to append the new row.
 8. Confirm to the user: absolute paths of the two saved files + the index entry added.
 
 ---

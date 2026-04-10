@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py\" encode",
+            "command": "__VENV_PYTHON__ \"${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py\" encode",
             "timeout": 5
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/fiscal_alerts.py\"",
+            "command": "__VENV_PYTHON__ \"${CLAUDE_PLUGIN_ROOT}/hooks/fiscal_alerts.py\"",
             "timeout": 10
           }
         ]
@@ -29,12 +29,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py\" decode",
+            "command": "__VENV_PYTHON__ \"${CLAUDE_PLUGIN_ROOT}/hooks/anonymize.py\" decode",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/output_router.py\"",
+            "command": "__VENV_PYTHON__ \"${CLAUDE_PLUGIN_ROOT}/hooks/output_router.py\"",
             "timeout": 15
           }
         ]

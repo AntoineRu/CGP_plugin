@@ -26,4 +26,4 @@ Always indicate the date of the information and its source. Flag clearly if any 
 Si oui : écris le contenu complet de ta réponse dans un fichier nommé
 `cgp-veille-<YYYYMMDD>.md` dans le répertoire courant.
 Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
-dans `~/CGP/_cabinet/veille/`.
+dans `CGP/Production/_cabinet/veille/`.

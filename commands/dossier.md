@@ -96,4 +96,4 @@ Si le CGP choisit l'option 3, confirmer simplement que le dossier est archivé e
 Le rapport final généré par l'agent `redacteur-cgp` est déjà enregistré sous
 `rapport-conseil-<NomClient>-<YYYYMMDD>.md`. Renomme-le en
 `cgp-dossier-<NomClient>-<YYYYMMDD>.md` avant de confirmer la fin de la commande,
-afin que `output_router.py` le détecte et le range dans `~/CGP/<Client>/reporting/`.
+afin que `output_router.py` le détecte et le range dans `CGP/Production/Clients/<Client>/reporting/`.
