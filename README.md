@@ -194,8 +194,8 @@ Enregistre un nouveau client dans le système de pseudonymisation RGPD. Attribue
 Charge ou sauvegarde le profil complet d'un client (situation familiale, patrimoine, objectifs, notes de session).
 
 Chaque sauvegarde écrit deux fichiers simultanément :
-- `CGP/_config/clients/<pseudo>.json` — copie pseudonymisée (utilisée par le système IA)
-- `CGP/_config/clients-private/<nom_réel>.json` — copie décodée avec les vrais noms, consultable directement
+- `CGP/_config/clients/<pseudo>.json` — copie pseudonymisée (utilisée par le système IA) : **aucun nom réel ne figure dans ce fichier** — tout nom réel présent dans le profil est remplacé par le pseudonyme avant écriture
+- `CGP/_config/clients-private/<nom_réel>.json` — copie décodée avec les vrais noms, consultable directement par le CGP
 
 ```
 /client load Martin Dupont      ← début de session
@@ -357,6 +357,9 @@ En utilisant ce plugin, vous transmettez des données à Anthropic (sous-traitan
 - Anonymisez les données clients : initiales, âge, ordres de grandeur
 - Informez vos clients de l'utilisation d'outils d'IA (clause à intégrer dans le DER)
 - Le plugin insère automatiquement les clauses RGPD dans les lettres de mission et comptes-rendus
+
+**Garantie d'étanchéité des profils clients :**
+`client_store.py` applique un encodage systématique avant toute écriture dans `CGP/_config/clients/` : les noms réels sont remplacés par leurs pseudonymes dans le contenu du profil, et le champ `_meta` ne contient jamais de nom réel. Le nom réel reste uniquement dans `CGP/_config/clients-private/` (hors portée de Claude) et dans `client-registry.json` (nécessaire à la résolution).
 
 Voir [RGPD.md](RGPD.md) pour la notice complète et les modèles de clauses.
 
