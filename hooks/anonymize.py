@@ -2,7 +2,7 @@
 """
 CGP Client Anonymizer — Claude Code Hook Script
 
-Registry: ~/.cgp-client-registry.json
+Registry: CGP/_config/client-registry.json (path resolved via config.py)
   { "real_to_pseudo": {"Martin Dupont": "Mathieu Durant"},
     "pseudo_to_real": {"Mathieu Durant": "Martin Dupont"} }
 
@@ -18,7 +18,7 @@ import re
 import sys
 from pathlib import Path
 
-REGISTRY_PATH = Path.home() / ".cgp-client-registry.json"
+from config import registry_path as _registry_path
 
 # French first names indexed by initial
 PRENOMS = {
@@ -86,13 +86,16 @@ DOCUMENT_EXTENSIONS = {".md", ".txt", ".tex", ".html", ".htm", ".rtf", ".csv"}
 # ── Registry ──────────────────────────────────────────────────────────────────
 
 def load_registry() -> dict:
-    if REGISTRY_PATH.exists():
-        return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    rp = _registry_path()
+    if rp.exists():
+        return json.loads(rp.read_text(encoding="utf-8"))
     return {"real_to_pseudo": {}, "pseudo_to_real": {}}
 
 
 def save_registry(reg: dict):
-    REGISTRY_PATH.write_text(
+    rp = _registry_path()
+    rp.parent.mkdir(parents=True, exist_ok=True)
+    rp.write_text(
         json.dumps(reg, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 

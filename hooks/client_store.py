@@ -2,14 +2,16 @@
 """
 CGP Client Store — Persistance des profils clients entre sessions
 
-Storage: ~/.cgp-clients/<pseudo>.json
-Registry: ~/.cgp-client-registry.json (géré par anonymize.py)
+Storage: CGP/_config/clients/<pseudo>.json
+Registry: CGP/_config/client-registry.json (géré par anonymize.py)
+
+Paths resolved via config.py → project_config.json (written by /setup).
 
 Modes:
-  save <pseudo>     — lit le JSON depuis stdin, sauvegarde dans ~/.cgp-clients/<pseudo>.json
+  save <pseudo>     — lit le JSON depuis stdin, sauvegarde dans CGP/_config/clients/<pseudo>.json
   load <nom>        — charge par pseudo ou nom réel (résolution via registre), affiche JSON
   list              — liste tous les profils sauvegardés (JSON array)
-  delete <pseudo>   — supprime ~/.cgp-clients/<pseudo>.json
+  delete <pseudo>   — supprime CGP/_config/clients/<pseudo>.json
 """
 
 import json
@@ -17,17 +19,18 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-REGISTRY_PATH = Path.home() / ".cgp-client-registry.json"
-CLIENTS_DIR = Path.home() / ".cgp-clients"
-CLIENTS_PRIVATE_DIR = Path.home() / "cgp-clients-private"
+from config import registry_path as _registry_path
+from config import clients_dir as _clients_dir
+from config import clients_private_dir as _clients_private_dir
 
 
 # ── Registry helpers ───────────────────────────────────────────────────────────
 
 def load_registry() -> dict:
-    if REGISTRY_PATH.exists():
+    rp = _registry_path()
+    if rp.exists():
         try:
-            return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+            return json.loads(rp.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, IOError):
             return {"real_to_pseudo": {}, "pseudo_to_real": {}}
     return {"real_to_pseudo": {}, "pseudo_to_real": {}}
@@ -58,8 +61,8 @@ def resolve_name(name: str, reg: dict) -> tuple:
 # ── Storage helpers ────────────────────────────────────────────────────────────
 
 def ensure_clients_dir():
-    CLIENTS_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
-    CLIENTS_PRIVATE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    _clients_dir().mkdir(parents=True, exist_ok=True, mode=0o700)
+    _clients_private_dir().mkdir(parents=True, exist_ok=True, mode=0o700)
 
 
 def _safe_filename(name: str) -> str:
@@ -68,11 +71,30 @@ def _safe_filename(name: str) -> str:
 
 
 def profile_path(pseudo: str) -> Path:
-    return CLIENTS_DIR / f"{_safe_filename(pseudo)}.json"
+    return _clients_dir() / f"{_safe_filename(pseudo)}.json"
 
 
 def private_profile_path(real_name: str) -> Path:
-    return CLIENTS_PRIVATE_DIR / f"{_safe_filename(real_name)}.json"
+    return _clients_private_dir() / f"{_safe_filename(real_name)}.json"
+
+
+def _encode_profile(profile: dict, reg: dict) -> dict:
+    """Return a copy of profile with all real names replaced by pseudonyms."""
+    import re
+
+    mapping = reg.get("real_to_pseudo", {})
+    if not mapping:
+        return profile
+
+    raw = json.dumps(profile, ensure_ascii=False)
+    for real, pseudo in sorted(mapping.items(), key=lambda x: -len(x[0])):
+        raw = re.sub(
+            r"(?<!\w)" + re.escape(real) + r"(?!\w)",
+            pseudo,
+            raw,
+            flags=re.IGNORECASE,
+        )
+    return json.loads(raw)
 
 
 def _decode_profile(profile: dict, reg: dict) -> dict:
@@ -120,31 +142,28 @@ def cmd_save(pseudo: str):
     real_name = reg.get("pseudo_to_real", {}).get(pseudo, "")
     saved_at = datetime.now(timezone.utc).isoformat()
 
-    # Ajouter les métadonnées
-    profile["_meta"] = {
-        "saved_at": saved_at,
-        "pseudo": pseudo,
-        "real_name": real_name,
-    }
-
-    # — Pseudonymized copy (AI working copy) —
-    path = profile_path(pseudo)
-    try:
-        path.write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding="utf-8")
-    except IOError as e:
-        print(json.dumps({"error": f"Impossible d'écrire le fichier : {e}"}, ensure_ascii=False))
-        sys.exit(1)
-
-    # — Private decoded copy (human-readable, real names) —
+    # — Private decoded copy (human-readable, real names) — built before stripping
     private_path = None
     private_error = None
     if real_name:
         try:
             decoded = _decode_profile(profile, reg)
+            decoded["_meta"] = {"saved_at": saved_at, "pseudo": pseudo, "real_name": real_name}
             private_path = private_profile_path(real_name)
             private_path.write_text(json.dumps(decoded, ensure_ascii=False, indent=2), encoding="utf-8")
         except (IOError, Exception) as e:
             private_error = str(e)
+
+    # — Pseudonymized copy (AI working copy) — strip all real names, no real_name in _meta —
+    pseudo_profile = _encode_profile(profile, reg)
+    pseudo_profile["_meta"] = {"saved_at": saved_at, "pseudo": pseudo}
+
+    path = profile_path(pseudo)
+    try:
+        path.write_text(json.dumps(pseudo_profile, ensure_ascii=False, indent=2), encoding="utf-8")
+    except IOError as e:
+        print(json.dumps({"error": f"Impossible d'écrire le fichier : {e}"}, ensure_ascii=False))
+        sys.exit(1)
 
     result = {
         "status": "saved",
@@ -200,12 +219,13 @@ def cmd_list():
     reg = load_registry()
     results = []
 
-    for path in sorted(CLIENTS_DIR.glob("*.json")):
+    for path in sorted(_clients_dir().glob("*.json")):
         try:
             profile = json.loads(path.read_text(encoding="utf-8"))
             meta = profile.get("_meta", {})
             pseudo = meta.get("pseudo", path.stem)
-            real_name = meta.get("real_name", reg.get("pseudo_to_real", {}).get(pseudo, ""))
+            # Real name is resolved from the registry only — never stored in the pseudonymized file
+            real_name = reg.get("pseudo_to_real", {}).get(pseudo, "")
             saved_at = meta.get("saved_at", "")
             results.append({
                 "pseudo": pseudo,
@@ -271,7 +291,7 @@ if __name__ == "__main__":
     else:
         print(
             "Usage: client_store.py [save <pseudo>|load <nom>|list|delete <pseudo>]\n"
-            "  save <pseudo>    — lit le profil JSON depuis stdin, sauvegarde dans ~/.cgp-clients/\n"
+            "  save <pseudo>    — lit le profil JSON depuis stdin, sauvegarde dans CGP/_config/clients/\n"
             "  load <nom>       — charge par pseudo ou nom réel, affiche JSON\n"
             "  list             — liste tous les profils sauvegardés\n"
             "  delete <pseudo>  — supprime le profil",

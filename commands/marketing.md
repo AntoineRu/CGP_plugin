@@ -14,3 +14,15 @@ If $ARGUMENTS is empty, ask:
 Draft the complete content following the format and rules defined in the marketing skill for the requested type. Apply all AMF compliance rules for financial communication — include the mandatory disclaimer if financial products or performance are mentioned.
 
 If the user needs topic ideas, consult references/idees-sujets.md from the marketing skill.
+
+---
+
+## Sauvegarde
+
+À la fin de ta réponse, propose à l'utilisateur :
+> "Voulez-vous sauvegarder cette réponse ? (oui / non)"
+
+Si oui : écris le contenu complet de ta réponse dans un fichier nommé
+`cgp-marketing-<YYYYMMDD>.md` dans le répertoire courant.
+Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
+dans `CGP/Production/_cabinet/marketing/`.

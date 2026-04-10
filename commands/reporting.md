@@ -18,3 +18,15 @@ Always include the date of the data, a compliance disclaimer, and a clear next-s
 
 Always append the confidentiality footer from cgp-persona references/rgpd.md to every reporting document.
 If the input contains identifying personal data (full name + precise financial figures), display the RGPD anonymization reminder from cgp-persona before proceeding.
+
+---
+
+## Sauvegarde
+
+À la fin de ta réponse, propose à l'utilisateur :
+> "Voulez-vous sauvegarder cette réponse ? (oui / non)"
+
+Si oui : écris le contenu complet de ta réponse dans un fichier nommé
+`cgp-reporting-<NomClient>-<YYYYMMDD>.md` dans le répertoire courant.
+Le hook `output_router.py` convertira automatiquement ce fichier en `.docx` et le rangera
+dans `CGP/Production/Clients/<Client>/reporting/`.

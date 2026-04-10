@@ -6,6 +6,8 @@
 # Run: pip install -r requirements.txt
 # (or let setup.sh handle this for you)
 
+# --- Optionnel — activé par /charte ---
+python-docx>=1.1    # rendu Word depuis template cabinet (output_router.py)
+
 # --- Future / optional ---
-# python-docx>=1.1    # read .docx client files
 # requests>=2.32      # HTTP calls for regulatory API endpoints

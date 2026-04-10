@@ -1,11 +1,13 @@
 ---
-description: 'First-run setup: detect Python, create venv, configure hooks, verify installation'
+description: 'First-run setup: install uv, create venv, configure hooks, verify installation'
 argument-hint: ''
 ---
 
 # /setup — CGP Assistant Initial Configuration
 
 You are the setup assistant for the CGP Assistant plugin. Walk through each phase below in order, using your Bash tool to run commands. Announce each phase clearly and report what you find/do. Stop and ask the user before any destructive action.
+
+**Important:** `$PROJECT_DIR` refers to the current working directory (`pwd`) at the time this command runs — it is the user's Claude Code project root.
 
 ---
 
@@ -31,64 +33,52 @@ Announce: "Environment detected: [env]"
 
 ---
 
-## Phase 2 — Find Python 3.8+
+## Phase 2 — Find or Install uv
 
-Test candidates in this order, stopping at the first one that returns version ≥ 3.8:
+Check if uv is available:
 
 ```bash
-# Try each of these (adapt for Windows: replace python3 with python/py where needed)
-for cmd in python3 python3.13 python3.12 python3.11 python3.10 python3.9 python3.8 python py; do
-  if command -v "$cmd" 2>/dev/null; then
-    ver=$("$cmd" -c "import sys; v=sys.version_info; print(f'{v.major}.{v.minor}')" 2>/dev/null)
-    echo "$cmd -> $ver"
-  fi
-done
+uv --version 2>/dev/null || echo "absent"
 ```
 
-On Windows (Git Bash or cmd), also try:
-- `py -3` (Python Launcher)
-- `%LOCALAPPDATA%\Programs\Python\Python3*\python.exe`
-- `%USERPROFILE%\AppData\Local\Microsoft\WindowsApps\python3.exe`
+**If uv is found**, announce: "uv [version] trouvé" and proceed to Phase 3.
 
-Also probe conda environments:
-```bash
-conda env list 2>/dev/null || true
-```
+**If uv is not found**, display the installation instructions adapted to the detected OS:
 
-**If no Python 3.8+ is found:**
-Stop and display this message to the user, tailored to their OS:
-
-> ### Python non trouvé — Installation requise
+> ### uv non trouvé — Installation requise
 >
-> Aucun Python 3.8+ n'est disponible sur ce système. Veuillez en installer un avant de relancer `/setup` :
+> `uv` est le gestionnaire Python utilisé par ce plugin. Installez-le avant de continuer :
 >
-> **Option A — Miniconda** (recommandée, légère) :
-> - Windows : https://docs.conda.io/en/latest/miniconda.html → télécharger `Miniconda3-latest-Windows-x86_64.exe`
-> - Linux/WSL : `curl -sL https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh | bash`
-> - macOS : `brew install miniconda` ou télécharger depuis le site
+> **Linux / macOS / WSL :**
+> ```bash
+> curl -LsSf https://astral.sh/uv/install.sh | sh
+> ```
 >
-> **Option B — Python.org** :
-> - https://www.python.org/downloads/ → cocher "Add Python to PATH" lors de l'installation
+> **Windows (PowerShell) :**
+> ```powershell
+> powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+> ```
 >
-> Après installation, redémarrez Claude Code et relancez `/setup`.
+> Après installation, redémarrez votre terminal et relancez `/setup`.
 
 Do not continue to Phase 3.
-
-**If found**, announce: "Python [version] trouvé : [path]" and store this as `PYTHON_FOUND`.
 
 ---
 
 ## Phase 3 — Create Virtual Environment
 
-The venv lives **one level above `cgp-assistant/`**, i.e. at the same level as the plugin directory. Determine its path:
+The venv lives inside the project directory at `$PROJECT_DIR/CGP/_config/venv/`.
 
-- On Linux/macOS/WSL: `VENV_DIR = "${CLAUDE_PLUGIN_ROOT}/../.venv"`
-- On Windows (native): `VENV_DIR = parent_of_CLAUDE_PLUGIN_ROOT + "\.venv"`
+Determine `$PROJECT_DIR`:
+```bash
+pwd
+```
 
 **Check if venv already exists:**
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3" --version 2>/dev/null \
-  || "${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe" --version 2>/dev/null \
+PROJECT_DIR="$(pwd)"
+"$PROJECT_DIR/CGP/_config/venv/bin/python3" --version 2>/dev/null \
+  || "$PROJECT_DIR/CGP/_config/venv/Scripts/python.exe" --version 2>/dev/null \
   || echo "venv absent"
 ```
 
@@ -97,57 +87,94 @@ The venv lives **one level above `cgp-assistant/`**, i.e. at the same level as t
 - If absent → create it:
 
 ```bash
-"$PYTHON_FOUND" -m venv "${CLAUDE_PLUGIN_ROOT}/../.venv"
+PROJECT_DIR="$(pwd)"
+mkdir -p "$PROJECT_DIR/CGP/_config"
+uv venv "$PROJECT_DIR/CGP/_config/venv" --python 3.12
 ```
 
 Announce: "Environnement virtuel créé dans [path]"
 
 Set `VENV_PYTHON` to:
-- Linux/macOS/WSL: `${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3`
-- Windows: `${CLAUDE_PLUGIN_ROOT}/../.venv/Scripts/python.exe`
+- Linux/macOS/WSL: `$PROJECT_DIR/CGP/_config/venv/bin/python3`
+- Windows: `$PROJECT_DIR/CGP/_config/venv/Scripts/python.exe`
 
 ---
 
 ## Phase 4 — Install Dependencies
 
-Upgrade pip silently:
+Install from `requirements.txt` using uv:
 ```bash
-"$VENV_PYTHON" -m pip install --quiet --upgrade pip
-```
-
-Install from `requirements.txt`:
-```bash
-"$VENV_PYTHON" -m pip install --quiet -r "${CLAUDE_PLUGIN_ROOT}/requirements.txt"
+uv pip install --python "$VENV_PYTHON" -r "${CLAUDE_PLUGIN_ROOT}/requirements.txt"
 ```
 
 Count active (non-comment, non-blank) lines in requirements.txt. If zero, announce: "Aucun paquet tiers à installer (le plugin n'utilise que la bibliothèque standard Python)."
 
 ---
 
-## Phase 5 — Generate `hooks/hooks.json`
+## Phase 5 — Write `project_config.json`
 
-`hooks.json` is gitignored (machine-specific). The template already uses `${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3`, which the hooks engine expands at runtime — so no path substitution is needed on Linux/macOS/WSL. On Windows, swap the binary sub-path to `Scripts/python.exe`.
+This file tells all hook scripts where the project data lives. It is machine-specific and gitignored.
 
 ```bash
 "$VENV_PYTHON" - <<'PYEOF'
-import pathlib, shutil, sys
+import json, os, pathlib, sys
 
-hooks_dir = pathlib.Path("${CLAUDE_PLUGIN_ROOT}/hooks")
+plugin_root = pathlib.Path(os.environ["CLAUDE_PLUGIN_ROOT"])
+project_dir = pathlib.Path.cwd()
+
+# Determine venv python path
+venv_base = project_dir / "CGP" / "_config" / "venv"
+if sys.platform == "win32":
+    venv_py = str(venv_base / "Scripts" / "python.exe")
+else:
+    venv_py = str(venv_base / "bin" / "python3")
+
+config = {
+    "project_dir": str(project_dir),
+    "venv_python": venv_py,
+}
+
+config_path = plugin_root / "hooks" / "project_config.json"
+config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+print(f"Écrit : {config_path}")
+PYEOF
+```
+
+---
+
+## Phase 5b — Generate `hooks/hooks.json`
+
+`hooks.json` is gitignored (machine-specific). Two committed templates exist:
+- `hooks/hooks.json.example` — Linux / macOS / WSL
+- `hooks/hooks.json.windows.example` — Windows native
+
+The setup selects the correct template and replaces the `__VENV_PYTHON__` placeholder with the actual absolute path.
+
+```bash
+"$VENV_PYTHON" - <<'PYEOF'
+import os, pathlib, sys, json
+
+plugin_root = pathlib.Path(os.environ["CLAUDE_PLUGIN_ROOT"])
+hooks_dir = plugin_root / "hooks"
 hooks_path = hooks_dir / "hooks.json"
-example_path = hooks_dir / "hooks.json.example"
 
 if hooks_path.exists():
     print("hooks.json already exists — kept as-is")
 else:
+    # Read project_config to get venv_python
+    config = json.loads((hooks_dir / "project_config.json").read_text(encoding="utf-8"))
+    venv_py = config["venv_python"]
+
+    example_name = "hooks.json.windows.example" if sys.platform == "win32" else "hooks.json.example"
+    example_path = hooks_dir / example_name
     if not example_path.exists():
-        print("ERROR: hooks.json.example not found — cannot generate hooks.json")
+        print(f"ERROR: {example_name} not found — cannot generate hooks.json")
         raise SystemExit(1)
+
     content = example_path.read_text(encoding="utf-8")
-    # On Windows, the venv binary is under Scripts/ not bin/
-    if sys.platform == "win32":
-        content = content.replace("bin/python3", "Scripts/python.exe")
+    content = content.replace("__VENV_PYTHON__", venv_py)
     hooks_path.write_text(content, encoding="utf-8")
-    print(f"Generated: {hooks_path}")
+    print(f"Generated: {hooks_path} (from {example_name})")
 PYEOF
 ```
 
@@ -158,25 +185,39 @@ Announce: "hooks.json généré avec succès."
 ## Phase 6 — Create Data Directories
 
 ```bash
-mkdir -p "$HOME/.cgp-clients"
-chmod 700 "$HOME/.cgp-clients" 2>/dev/null || true   # no-op on Windows
+PROJECT_DIR="$(pwd)"
 
-mkdir -p "$HOME/cgp-clients-private"
-chmod 700 "$HOME/cgp-clients-private" 2>/dev/null || true
+# Config interne
+mkdir -p "$PROJECT_DIR/CGP/_config/clients"
+chmod 700 "$PROJECT_DIR/CGP/_config/clients" 2>/dev/null || true
+mkdir -p "$PROJECT_DIR/CGP/_config/clients-private"
+chmod 700 "$PROJECT_DIR/CGP/_config/clients-private" 2>/dev/null || true
+mkdir -p "$PROJECT_DIR/CGP/_config/sessions/archive"
+mkdir -p "$PROJECT_DIR/CGP/_config/sessions/references"
+
+# Productions
+mkdir -p "$PROJECT_DIR/CGP/Production/_cabinet/veille"
+mkdir -p "$PROJECT_DIR/CGP/Production/_cabinet/vulgarisation"
+mkdir -p "$PROJECT_DIR/CGP/Production/_cabinet/marketing"
+mkdir -p "$PROJECT_DIR/CGP/Production/_cabinet/prospection"
+mkdir -p "$PROJECT_DIR/CGP/Production/Clients"
 ```
 
-Explain the two directories to the user:
-- `~/.cgp-clients/` — pseudonymized profiles, used by the AI during sessions
-- `~/cgp-clients-private/` — decoded profiles with real names, for your direct consultation
+Explain the directory structure to the user:
+- `CGP/_config/` — données internes du plugin (profils clients, registre RGPD, sessions archivées, environnement Python)
+- `CGP/Production/_cabinet/` — productions non liées à un client spécifique (veille, marketing, etc.)
+- `CGP/Production/Clients/<NomClient>/` — créé automatiquement lors de la première production pour ce client
 
-Check if `~/.cgp-client-registry.json` exists; if not, create an empty one:
+Check if `CGP/_config/client-registry.json` exists; if not, create an empty one:
 ```bash
 "$VENV_PYTHON" - <<'PYEOF'
-import json, pathlib
-p = pathlib.Path.home() / ".cgp-client-registry.json"
+import json, pathlib, os
+
+project_dir = pathlib.Path.cwd()
+p = project_dir / "CGP" / "_config" / "client-registry.json"
 if not p.exists():
     p.write_text(json.dumps({"real_to_pseudo": {}, "pseudo_to_real": {}}, indent=2), encoding="utf-8")
-    print("Registre RGPD initialisé : ~/.cgp-client-registry.json")
+    print("Registre RGPD initialisé : CGP/_config/client-registry.json")
 else:
     print("Registre RGPD existant conservé.")
 PYEOF
@@ -190,7 +231,8 @@ Run each hook script and check exit code. Report pass/fail for each.
 
 **fiscal_alerts.py** — temporarily remove the daily-run stamp so it actually executes, then restore it:
 ```bash
-STAMP="$HOME/.cgp-last-fiscal-alert"
+PROJECT_DIR="$(pwd)"
+STAMP="$PROJECT_DIR/CGP/_config/last-fiscal-alert"
 BACKUP=$(cat "$STAMP" 2>/dev/null || echo "")
 rm -f "$STAMP"
 echo '{}' | "$VENV_PYTHON" "${CLAUDE_PLUGIN_ROOT}/hooks/fiscal_alerts.py" && echo "PASS" || echo "FAIL"
@@ -212,6 +254,13 @@ echo '{"user_prompt":"test"}' | "$VENV_PYTHON" "${CLAUDE_PLUGIN_ROOT}/hooks/anon
 "$VENV_PYTHON" "${CLAUDE_PLUGIN_ROOT}/hooks/client_store.py" list && echo "PASS" || echo "FAIL"
 ```
 
+**output_router.py — filter (fichier non-cgp) :**
+```bash
+echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/not-cgp.md"}}' \
+  | "$VENV_PYTHON" "${CLAUDE_PLUGIN_ROOT}/hooks/output_router.py" && echo "PASS" || echo "FAIL"
+```
+Attendu : PASS sans sortie (fichier non-cgp ignoré silencieusement).
+
 If any test fails, display the error output and advise the user to check that the venv was created correctly and that `requirements.txt` was installed.
 
 ---
@@ -224,11 +273,13 @@ Print a final summary table:
 ╔══════════════════════════════════════════════════════╗
 ║         CGP Assistant — Configuration terminée       ║
 ╠══════════════════════════════════════════════════════╣
-║  Python          : [version] ([path])                ║
-║  Venv            : [VENV_DIR]                        ║
-║  Profils clients : ~/.cgp-clients/                   ║
-║  Registre RGPD   : ~/.cgp-client-registry.json       ║
-║  Tests hooks     : [✓ / ✗ N échec(s)]               ║
+║  uv               : [version]                        ║
+║  Python           : [version] ([VENV_PYTHON])        ║
+║  Venv             : CGP/_config/venv/                ║
+║  Profils clients  : CGP/_config/clients/             ║
+║  Productions      : CGP/Production/                  ║
+║  Registre RGPD    : CGP/_config/client-registry.json ║
+║  Tests hooks      : [✓ / ✗ N échec(s)]              ║
 ╚══════════════════════════════════════════════════════╝
 ```
 
