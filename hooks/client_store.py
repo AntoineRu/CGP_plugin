@@ -78,6 +78,25 @@ def private_profile_path(real_name: str) -> Path:
     return _clients_private_dir() / f"{_safe_filename(real_name)}.json"
 
 
+def _encode_profile(profile: dict, reg: dict) -> dict:
+    """Return a copy of profile with all real names replaced by pseudonyms."""
+    import re
+
+    mapping = reg.get("real_to_pseudo", {})
+    if not mapping:
+        return profile
+
+    raw = json.dumps(profile, ensure_ascii=False)
+    for real, pseudo in sorted(mapping.items(), key=lambda x: -len(x[0])):
+        raw = re.sub(
+            r"(?<!\w)" + re.escape(real) + r"(?!\w)",
+            pseudo,
+            raw,
+            flags=re.IGNORECASE,
+        )
+    return json.loads(raw)
+
+
 def _decode_profile(profile: dict, reg: dict) -> dict:
     """Return a copy of profile with all pseudonyms replaced by real names."""
     import re
@@ -123,31 +142,28 @@ def cmd_save(pseudo: str):
     real_name = reg.get("pseudo_to_real", {}).get(pseudo, "")
     saved_at = datetime.now(timezone.utc).isoformat()
 
-    # Ajouter les métadonnées
-    profile["_meta"] = {
-        "saved_at": saved_at,
-        "pseudo": pseudo,
-        "real_name": real_name,
-    }
-
-    # — Pseudonymized copy (AI working copy) —
-    path = profile_path(pseudo)
-    try:
-        path.write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding="utf-8")
-    except IOError as e:
-        print(json.dumps({"error": f"Impossible d'écrire le fichier : {e}"}, ensure_ascii=False))
-        sys.exit(1)
-
-    # — Private decoded copy (human-readable, real names) —
+    # — Private decoded copy (human-readable, real names) — built before stripping
     private_path = None
     private_error = None
     if real_name:
         try:
             decoded = _decode_profile(profile, reg)
+            decoded["_meta"] = {"saved_at": saved_at, "pseudo": pseudo, "real_name": real_name}
             private_path = private_profile_path(real_name)
             private_path.write_text(json.dumps(decoded, ensure_ascii=False, indent=2), encoding="utf-8")
         except (IOError, Exception) as e:
             private_error = str(e)
+
+    # — Pseudonymized copy (AI working copy) — strip all real names, no real_name in _meta —
+    pseudo_profile = _encode_profile(profile, reg)
+    pseudo_profile["_meta"] = {"saved_at": saved_at, "pseudo": pseudo}
+
+    path = profile_path(pseudo)
+    try:
+        path.write_text(json.dumps(pseudo_profile, ensure_ascii=False, indent=2), encoding="utf-8")
+    except IOError as e:
+        print(json.dumps({"error": f"Impossible d'écrire le fichier : {e}"}, ensure_ascii=False))
+        sys.exit(1)
 
     result = {
         "status": "saved",
@@ -208,7 +224,8 @@ def cmd_list():
             profile = json.loads(path.read_text(encoding="utf-8"))
             meta = profile.get("_meta", {})
             pseudo = meta.get("pseudo", path.stem)
-            real_name = meta.get("real_name", reg.get("pseudo_to_real", {}).get(pseudo, ""))
+            # Real name is resolved from the registry only — never stored in the pseudonymized file
+            real_name = reg.get("pseudo_to_real", {}).get(pseudo, "")
             saved_at = meta.get("saved_at", "")
             results.append({
                 "pseudo": pseudo,
